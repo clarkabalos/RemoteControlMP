@@ -85,7 +85,6 @@ public class MultimediaApp extends javax.swing.JFrame {
     }
     
     public void showImage(ImageIcon icon) {
-        //ImageIcon icon = new ImageIcon(img);
         imageViewer.setIcon(icon);
     }
     
@@ -99,28 +98,30 @@ public class MultimediaApp extends javax.swing.JFrame {
         showImage(setImageSize(index));
     }
     
-    public void slideshow() { 
-        //set a timer 
-        time = new Timer(500,new ActionListener() { 
+    public void slideshow(int i) { 
+        time = new Timer(i,new ActionListener() { 
             @Override public void actionPerformed(ActionEvent e) { 
                 showImage(setImageSize(index)); 
-                index += 1; 
+                index++; 
                 if(index >= Photos.size())
                     index = 0; 
             } 
         }); 
-        //add(pic); 
+        
         time.start(); 
-        //getContentPane().setBackground(Color.decode("#bdb67b")); 
-        //setLocationRelativeTo(null); 
-        //setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE); 
-        //setVisible(true); 
-    }  //create a function to resize the image  
+    }  
     
-    public ImageIcon setImageSize(int i){ 
+    public ImageIcon setImageSize(int i) { 
         Image img = Photos.get(i).getImage().getScaledInstance(imageViewer.getWidth(), imageViewer.getHeight(), Image.SCALE_SMOOTH);
         ImageIcon icon = new ImageIcon(img); 
         return icon; 
+    }
+    
+    public void setTime(int i) {
+        if(time.isRunning()) {
+            time.stop();
+            slideshow(i);
+        }
     }
     
     // Variables declaration - do not modify//GEN-BEGIN:variables

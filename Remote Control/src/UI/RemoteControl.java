@@ -12,6 +12,8 @@ public class RemoteControl extends javax.swing.JFrame {
         initComponents();
         clientSocket = _clientSocket;
         IPAddress = _IPAddress;
+        editTime.setVisible(false);
+        applyBtn.setVisible(false);
     }
 
     /**
@@ -23,12 +25,13 @@ public class RemoteControl extends javax.swing.JFrame {
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
 
+        applyBtn = new javax.swing.JButton();
         closeBtn = new javax.swing.JButton();
         backBtn = new javax.swing.JButton();
         nextBtn = new javax.swing.JButton();
         slideshowBtn = new javax.swing.JButton();
         jLabel1 = new javax.swing.JLabel();
-        timeSlider = new javax.swing.JSlider();
+        editTime = new javax.swing.JFormattedTextField();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         setMinimumSize(new java.awt.Dimension(160, 250));
@@ -36,6 +39,18 @@ public class RemoteControl extends javax.swing.JFrame {
         setResizable(false);
         setSize(new java.awt.Dimension(150, 220));
         getContentPane().setLayout(new org.netbeans.lib.awtextra.AbsoluteLayout());
+
+        applyBtn.setFont(new java.awt.Font("Calibri Light", 1, 12)); // NOI18N
+        applyBtn.setText("Apply");
+        applyBtn.setBorder(null);
+        applyBtn.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
+        applyBtn.setOpaque(false);
+        applyBtn.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                applyBtnActionPerformed(evt);
+            }
+        });
+        getContentPane().add(applyBtn, new org.netbeans.lib.awtextra.AbsoluteConstraints(80, 170, 50, 40));
 
         closeBtn.setBackground(new java.awt.Color(255, 51, 51));
         closeBtn.setFont(new java.awt.Font("Calibri Light", 1, 15)); // NOI18N
@@ -92,7 +107,10 @@ public class RemoteControl extends javax.swing.JFrame {
         jLabel1.setText("Universal Remote");
         jLabel1.setToolTipText("");
         getContentPane().add(jLabel1, new org.netbeans.lib.awtextra.AbsoluteConstraints(0, 20, 150, 40));
-        getContentPane().add(timeSlider, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 170, 130, -1));
+
+        editTime.setFormatterFactory(new javax.swing.text.DefaultFormatterFactory(new javax.swing.text.NumberFormatter(new java.text.DecimalFormat("#0"))));
+        editTime.setInheritsPopupMenu(true);
+        getContentPane().add(editTime, new org.netbeans.lib.awtextra.AbsoluteConstraints(20, 170, 60, 40));
 
         pack();
     }// </editor-fold>//GEN-END:initComponents
@@ -108,6 +126,8 @@ public class RemoteControl extends javax.swing.JFrame {
     private void slideshowBtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_slideshowBtnActionPerformed
         try {
             request("Slideshow");
+            editTime.setVisible(true);
+            applyBtn.setVisible(true);
         } catch (Exception ex) {
             Logger.getLogger(RemoteControl.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -132,6 +152,16 @@ public class RemoteControl extends javax.swing.JFrame {
         }
     }//GEN-LAST:event_closeBtnActionPerformed
 
+    private void applyBtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_applyBtnActionPerformed
+        //int i = Integer.parseInt(editTime.getText());
+        try {
+            Integer.parseInt(editTime.getText());
+            request("SetTime:" + editTime.getText());
+        } catch (Exception ex) {
+            Logger.getLogger(RemoteControl.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }//GEN-LAST:event_applyBtnActionPerformed
+
     /**
      * @param args the command line arguments
      */
@@ -147,11 +177,12 @@ public class RemoteControl extends javax.swing.JFrame {
         clientSocket.send(sendPacket);  
     }
     // Variables declaration - do not modify//GEN-BEGIN:variables
+    private javax.swing.JButton applyBtn;
     private javax.swing.JButton backBtn;
     private javax.swing.JButton closeBtn;
+    private javax.swing.JFormattedTextField editTime;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JButton nextBtn;
     private javax.swing.JButton slideshowBtn;
-    private javax.swing.JSlider timeSlider;
     // End of variables declaration//GEN-END:variables
 }

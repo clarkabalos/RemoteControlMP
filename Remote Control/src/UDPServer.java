@@ -31,8 +31,13 @@ public class UDPServer {
             } else if(trimmedRequest.equalsIgnoreCase("Back")) {
                 app.prevImage();
             } else if(trimmedRequest.equalsIgnoreCase("Slideshow")) {
-                app.slideshow();
-            }else if(trimmedRequest.equalsIgnoreCase("Close")) {
+                app.slideshow(500);
+            } else if(trimmedRequest.contains("SetTime")) {
+                int index = trimmedRequest.lastIndexOf(":");
+                String time = trimmedRequest.substring(index + 1,trimmedRequest.length());
+                System.out.println(time);
+                app.setTime(Integer.parseInt(time));
+            } else if(trimmedRequest.equalsIgnoreCase("Close")) {
                 app.dispose();
                 serverSocket.close();
                 System.exit(0);
