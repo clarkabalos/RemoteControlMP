@@ -16,7 +16,7 @@ public class UDPServer {
         while(true) {
             DatagramPacket receivePacket = new DatagramPacket(receiveData, receiveData.length);
             serverSocket.receive(receivePacket);
-            String request = new String(receivePacket.getData());
+            String request = new String(receivePacket.getData(), 0, receivePacket.getLength());
             /*System.out.println("RECEIVED: " + sentence);
             InetAddress IPAddress = receivePacket.getAddress();
             int port = receivePacket.getPort();
