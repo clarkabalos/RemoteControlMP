@@ -106,7 +106,11 @@ public class RemoteControl extends javax.swing.JFrame {
     }//GEN-LAST:event_nextBtnActionPerformed
 
     private void slideshowBtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_slideshowBtnActionPerformed
-        // TODO add your handling code here:
+        try {
+            request("Slideshow");
+        } catch (Exception ex) {
+            Logger.getLogger(RemoteControl.class.getName()).log(Level.SEVERE, null, ex);
+        }
     }//GEN-LAST:event_slideshowBtnActionPerformed
 
     private void backBtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_backBtnActionPerformed

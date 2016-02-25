@@ -27,12 +27,12 @@ public class UDPServer {
             String trimmedRequest = request.trim();
             
             if(trimmedRequest.equals("Next")) {
-                System.out.println("HUY");
                 app.nextImage();
             } else if(trimmedRequest.equalsIgnoreCase("Back")) {
-                System.out.println("WEW");
                 app.prevImage();
-            } else if(trimmedRequest.equalsIgnoreCase("Close")) {
+            } else if(trimmedRequest.equalsIgnoreCase("Slideshow")) {
+                app.slideshow();
+            }else if(trimmedRequest.equalsIgnoreCase("Close")) {
                 app.dispose();
                 serverSocket.close();
                 System.exit(0);

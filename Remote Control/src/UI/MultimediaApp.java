@@ -2,22 +2,27 @@ package UI;
 
 import Bean.Photo;
 import java.awt.Image;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.io.File;
 import java.util.ArrayList;
 import javax.swing.ImageIcon;
+import javax.swing.JFrame;
 import javax.swing.JLabel;
+import javax.swing.Timer;
 
 public class MultimediaApp extends javax.swing.JFrame {
     private ArrayList<Photo> Photos;
     private File[] images;
     private JLabel[] label;
     private int index;
+    private Timer time; 
             
     public MultimediaApp() {
         initComponents();
         Photos = new ArrayList<>();
         showImagesInFolder(new File("C:\\Users\\SVE14112EG\\Github\\RemoteControlMP\\Remote Control\\Photos"));
-        showImage(Photos.get(0).getImage());
+        showImage(setImageSize(index));
         index = 0;
     }
 
@@ -79,20 +84,43 @@ public class MultimediaApp extends javax.swing.JFrame {
         }
     }
     
-    public void showImage(Image img) {
-        ImageIcon icon = new ImageIcon(img);
+    public void showImage(ImageIcon icon) {
+        //ImageIcon icon = new ImageIcon(img);
         imageViewer.setIcon(icon);
     }
     
     public void nextImage() {
         index++;
-        System.out.println(index);
-        showImage(Photos.get(index).getImage());
+        showImage(setImageSize(index));
     }
     
     public void prevImage() {
         index--;
-        showImage(Photos.get(index).getImage());
+        showImage(setImageSize(index));
+    }
+    
+    public void slideshow() { 
+        //set a timer 
+        time = new Timer(500,new ActionListener() { 
+            @Override public void actionPerformed(ActionEvent e) { 
+                showImage(setImageSize(index)); 
+                index += 1; 
+                if(index >= Photos.size())
+                    index = 0; 
+            } 
+        }); 
+        //add(pic); 
+        time.start(); 
+        //getContentPane().setBackground(Color.decode("#bdb67b")); 
+        //setLocationRelativeTo(null); 
+        //setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE); 
+        //setVisible(true); 
+    }  //create a function to resize the image  
+    
+    public ImageIcon setImageSize(int i){ 
+        Image img = Photos.get(i).getImage().getScaledInstance(imageViewer.getWidth(), imageViewer.getHeight(), Image.SCALE_SMOOTH);
+        ImageIcon icon = new ImageIcon(img); 
+        return icon; 
     }
     
     // Variables declaration - do not modify//GEN-BEGIN:variables
