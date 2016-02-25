@@ -3,17 +3,50 @@ import java.net.*;
 
 public class UDPClient {
     public static void main(String args[]) throws Exception {
-        BufferedReader inFromUser = new BufferedReader(new InputStreamReader(System.in));
-        DatagramSocket clientSocket = new DatagramSocket();
-        InetAddress IPAddress = InetAddress.getByName("localhost");
+        String wholeText ="";
+        String sentence ="";
         
-        byte[] sendData = new byte[1024];
-        byte[] receiveData = new byte[1024];
+        //BufferedReader inFromUser = new BufferedReader(new InputStreamReader(System.in));
+        //System.out.println(new File("hi.txt").getAbsoluteFile());
+	BufferedReader inFromUser = new BufferedReader(new FileReader("test.txt"));
         
-        String sentence = inFromUser.readLine();
-        sendData = sentence.getBytes();
-        DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length, IPAddress, 9876);
-        clientSocket.send(sendPacket);
+	try {
+            StringBuilder sb = new StringBuilder();
+            String line = inFromUser.readLine();
+            while(line != null) {
+                    sb.append(line);
+                    sb.append(System.lineSeparator());
+                    line = inFromUser.readLine();
+            }
+            wholeText = sb.toString();
+	} finally {
+            inFromUser.close();
+	}
+        
+	DatagramSocket clientSocket = new DatagramSocket();       
+	InetAddress IPAddress = InetAddress.getByName("localhost");       
+	byte[] sendData = new byte[20];       
+	byte[] receiveData = new byte[20];       
+	//String sentence = inFromUser.readLine();
+	
+	int i = 0;
+	int j = sendData.length - 1;
+	int length = wholeText.length();
+	while(length > 0) {
+            if(j < wholeText.length()) {
+		sentence = wholeText.substring(i, j);
+            } else {
+                int diff = j - wholeText.length();
+                j -= diff;
+                sentence = wholeText.substring(i, j);
+            }
+            sendData = sentence.getBytes();   
+            DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length, IPAddress, 9876);       
+            clientSocket.send(sendPacket);  
+            i = j;
+            j += 20;
+            length -= 20;
+	}
         
         DatagramPacket receivePacket = new DatagramPacket(receiveData, receiveData.length);
         clientSocket.receive(receivePacket);
