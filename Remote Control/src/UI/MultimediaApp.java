@@ -1,18 +1,20 @@
 package UI;
 
+import Bean.Photo;
 import java.awt.Image;
 import java.io.File;
-import java.io.IOException;
-import javax.imageio.ImageIO;
+import java.util.ArrayList;
 import javax.swing.ImageIcon;
 import javax.swing.JLabel;
 
 public class MultimediaApp extends javax.swing.JFrame {
+    private ArrayList<Photo> Photos;
     private File[] images;
     private JLabel[] label;
             
     public MultimediaApp() {
         initComponents();
+        Photos = new ArrayList<>();
     }
 
     /**
@@ -51,7 +53,6 @@ public class MultimediaApp extends javax.swing.JFrame {
      */
 
     public void showImagesInFolder (File folder) {
-        Image img = null;
         Image thumbnail = null;
         images = folder.listFiles();
         label = new JLabel[images.length];
@@ -60,20 +61,18 @@ public class MultimediaApp extends javax.swing.JFrame {
             int index = imgPath.lastIndexOf('\\');
             String name = imgPath.substring(index+1);
             if(name.endsWith("jpg")) {
-                //Photo photo = new Photo(name, " ", imgPath);
-                try{
-                    // read() below actually returns a BufferedImage object
+                Photo photo = new Photo(name, imgPath);
+                /*try{
                     img = ImageIO.read(new File(imgPath));
-                    // The thumbnail is usually a smaller, scaled version of the image
                     thumbnail = img.getScaledInstance(80, 80, Image.SCALE_SMOOTH);
                 }catch(IOException e){
                     System.out.println(e);
-                }
+                }*/
+                thumbnail = photo.getImage().getScaledInstance(80, 80, Image.SCALE_SMOOTH);
                 ImageIcon icon = new ImageIcon(thumbnail);
                 label[i] = new JLabel();
                 label[i].setIcon(icon);
                 label[i].setText("");
-                label[i].setName(name);
                 //label[i].addMouseListener(new MyMouseListener(i, photo));
                 allThumbnails.add(label[i]);
                 allThumbnails.repaint();
