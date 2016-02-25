@@ -1,8 +1,12 @@
 import java.io.*;
 import java.net.*;
+import UI.MultimediaApp;
 
 public class UDPServer {
     public static void main(String args[]) throws Exception {
+        MultimediaApp app = new MultimediaApp();
+        app.setVisible(true);
+        
         DatagramSocket serverSocket = new DatagramSocket(9876);
         byte[] receiveData = new byte[1024];
         byte[] sendData = new byte[1024];

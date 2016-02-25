@@ -1,6 +1,6 @@
-
 import java.io.*;
 import java.net.*;
+import UI.RemoteControl;
 
 public class UDPClient {
     
@@ -23,26 +23,12 @@ public class UDPClient {
         return sb; 
     }
     
-    public static void main(String args[]) throws Exception {
-        String wholeText ="";
+    public static void main(String args[]) throws Exception {        
+        /*String wholeText ="";
         String sentence ="";
         
         //BufferedReader inFromUser = new BufferedReader(new InputStreamReader(System.in));
         //System.out.println(new File("hi.txt").getAbsoluteFile());
-	/*BufferedReader inFromUser = new BufferedReader(new FileReader("test.txt"));
-        
-	try {
-            StringBuilder sb = new StringBuilder();
-            String line = inFromUser.readLine();
-            while(line != null) {
-                    sb.append(line);
-                    sb.append(System.lineSeparator());
-                    line = inFromUser.readLine();
-            }
-            wholeText = sb.toString();
-	} finally {
-            inFromUser.close();
-	} */
         
         wholeText = readText("test.txt").toString();
         
@@ -82,6 +68,9 @@ public class UDPClient {
         
         String modifiedSentence = new String(receivePacket.getData());
         System.out.println("FROM SERVER: " + modifiedSentence);
-        clientSocket.close();
+        clientSocket.close(); */
+        
+        RemoteControl rc = new RemoteControl();
+        rc.setVisible(true);
     }
 }
