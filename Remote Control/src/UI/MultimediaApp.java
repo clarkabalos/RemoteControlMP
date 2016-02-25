@@ -1,19 +1,16 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package UI;
 
-/**
- *
- * @author SVE14112EG
- */
-public class MultimediaApp extends javax.swing.JFrame {
+import java.awt.Image;
+import java.io.File;
+import java.io.IOException;
+import javax.imageio.ImageIO;
+import javax.swing.ImageIcon;
+import javax.swing.JLabel;
 
-    /**
-     * Creates new form MultimediaApp
-     */
+public class MultimediaApp extends javax.swing.JFrame {
+    private File[] images;
+    private JLabel[] label;
+            
     public MultimediaApp() {
         initComponents();
     }
@@ -53,7 +50,37 @@ public class MultimediaApp extends javax.swing.JFrame {
      * @param args the command line arguments
      */
 
-
+    public void showImagesInFolder (File folder) {
+        Image img = null;
+        Image thumbnail = null;
+        images = folder.listFiles();
+        label = new JLabel[images.length];
+        for(int i = 0; i < images.length; i++) {
+            String imgPath = images[i].getAbsolutePath();
+            int index = imgPath.lastIndexOf('\\');
+            String name = imgPath.substring(index+1);
+            if(name.endsWith("jpg")) {
+                //Photo photo = new Photo(name, " ", imgPath);
+                try{
+                    // read() below actually returns a BufferedImage object
+                    img = ImageIO.read(new File(imgPath));
+                    // The thumbnail is usually a smaller, scaled version of the image
+                    thumbnail = img.getScaledInstance(80, 80, Image.SCALE_SMOOTH);
+                }catch(IOException e){
+                    System.out.println(e);
+                }
+                ImageIcon icon = new ImageIcon(thumbnail);
+                label[i] = new JLabel();
+                label[i].setIcon(icon);
+                label[i].setText("");
+                label[i].setName(name);
+                //label[i].addMouseListener(new MyMouseListener(i, photo));
+                allThumbnails.add(label[i]);
+                allThumbnails.repaint();
+                allThumbnails.updateUI();
+            }
+        }
+    }
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JPanel allThumbnails;
     private javax.swing.JLabel imageViewer;
