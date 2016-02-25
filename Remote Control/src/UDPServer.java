@@ -6,7 +6,6 @@ public class UDPServer {
     public static void main(String args[]) throws Exception {
         MultimediaApp app = new MultimediaApp();
         app.setVisible(true);
-        app.showImagesInFolder(new File("C:\\Users\\SVE14112EG\\Github\\RemoteControlMP\\Remote Control\\Photos"));
         System.out.println(new File(".").getAbsoluteFile());
         DatagramSocket serverSocket = new DatagramSocket(9876);
         byte[] receiveData = new byte[1024];

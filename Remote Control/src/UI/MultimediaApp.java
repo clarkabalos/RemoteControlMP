@@ -15,6 +15,8 @@ public class MultimediaApp extends javax.swing.JFrame {
     public MultimediaApp() {
         initComponents();
         Photos = new ArrayList<>();
+        showImagesInFolder(new File("C:\\Users\\SVE14112EG\\Github\\RemoteControlMP\\Remote Control\\Photos"));
+        showImage(Photos.get(0).getImage());
     }
 
     /**
@@ -62,23 +64,22 @@ public class MultimediaApp extends javax.swing.JFrame {
             String name = imgPath.substring(index+1);
             if(name.endsWith("jpg")) {
                 Photo photo = new Photo(name, imgPath);
-                /*try{
-                    img = ImageIO.read(new File(imgPath));
-                    thumbnail = img.getScaledInstance(80, 80, Image.SCALE_SMOOTH);
-                }catch(IOException e){
-                    System.out.println(e);
-                }*/
+                Photos.add(photo);
                 thumbnail = photo.getImage().getScaledInstance(80, 80, Image.SCALE_SMOOTH);
                 ImageIcon icon = new ImageIcon(thumbnail);
                 label[i] = new JLabel();
                 label[i].setIcon(icon);
                 label[i].setText("");
-                //label[i].addMouseListener(new MyMouseListener(i, photo));
                 allThumbnails.add(label[i]);
                 allThumbnails.repaint();
                 allThumbnails.updateUI();
             }
         }
+    }
+    
+    public void showImage(Image img) {
+        ImageIcon icon = new ImageIcon(img);
+        imageViewer.setIcon(icon);
     }
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JPanel allThumbnails;
