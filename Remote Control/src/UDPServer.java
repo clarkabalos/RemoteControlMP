@@ -1,12 +1,14 @@
 import java.io.*;
 import java.net.*;
 import UI.MultimediaApp;
+import static com.sun.xml.internal.ws.util.VersionUtil.compare;
 
 public class UDPServer {
     public static void main(String args[]) throws Exception {
         MultimediaApp app = new MultimediaApp();
         app.setVisible(true);
-        System.out.println(new File(".").getAbsoluteFile());
+        
+        //System.out.println(new File(".").getAbsoluteFile());
         DatagramSocket serverSocket = new DatagramSocket(9876);
         byte[] receiveData = new byte[1024];
         byte[] sendData = new byte[1024];
@@ -14,17 +16,27 @@ public class UDPServer {
         while(true) {
             DatagramPacket receivePacket = new DatagramPacket(receiveData, receiveData.length);
             serverSocket.receive(receivePacket);
-            
-            String sentence = new String(receivePacket.getData());
-            System.out.println("RECEIVED: " + sentence);
-            
+            String request = new String(receivePacket.getData());
+            /*System.out.println("RECEIVED: " + sentence);
             InetAddress IPAddress = receivePacket.getAddress();
             int port = receivePacket.getPort();
-            
             String capitalizedSentence = sentence.toUpperCase();
             sendData = capitalizedSentence.getBytes();
             DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length, IPAddress, port);
-            serverSocket.send(sendPacket);
+            serverSocket.send(sendPacket); */
+            String trimmedRequest = request.trim();
+            
+            if(trimmedRequest.equals("Next")) {
+                System.out.println("HUY");
+                app.nextImage();
+            } else if(trimmedRequest.equalsIgnoreCase("Back")) {
+                System.out.println("WEW");
+                app.prevImage();
+            } else if(trimmedRequest.equalsIgnoreCase("Close")) {
+                app.dispose();
+                serverSocket.close();
+                System.exit(0);
+            }
         }
     }
 }

@@ -11,12 +11,14 @@ public class MultimediaApp extends javax.swing.JFrame {
     private ArrayList<Photo> Photos;
     private File[] images;
     private JLabel[] label;
+    private int index;
             
     public MultimediaApp() {
         initComponents();
         Photos = new ArrayList<>();
         showImagesInFolder(new File("C:\\Users\\SVE14112EG\\Github\\RemoteControlMP\\Remote Control\\Photos"));
         showImage(Photos.get(0).getImage());
+        index = 0;
     }
 
     /**
@@ -81,6 +83,18 @@ public class MultimediaApp extends javax.swing.JFrame {
         ImageIcon icon = new ImageIcon(img);
         imageViewer.setIcon(icon);
     }
+    
+    public void nextImage() {
+        index++;
+        System.out.println(index);
+        showImage(Photos.get(index).getImage());
+    }
+    
+    public void prevImage() {
+        index--;
+        showImage(Photos.get(index).getImage());
+    }
+    
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JPanel allThumbnails;
     private javax.swing.JLabel imageViewer;

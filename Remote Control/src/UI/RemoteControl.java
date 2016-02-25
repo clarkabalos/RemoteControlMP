@@ -1,9 +1,17 @@
 package UI;
 
-public class RemoteControl extends javax.swing.JFrame {
+import java.net.*;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
-    public RemoteControl() {
+public class RemoteControl extends javax.swing.JFrame {
+    DatagramSocket clientSocket;
+    InetAddress IPAddress;
+    
+    public RemoteControl(DatagramSocket _clientSocket, InetAddress _IPAddress) {
         initComponents();
+        clientSocket = _clientSocket;
+        IPAddress = _IPAddress;
     }
 
     /**
@@ -15,6 +23,7 @@ public class RemoteControl extends javax.swing.JFrame {
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
 
+        closeBtn = new javax.swing.JButton();
         backBtn = new javax.swing.JButton();
         nextBtn = new javax.swing.JButton();
         slideshowBtn = new javax.swing.JButton();
@@ -27,6 +36,20 @@ public class RemoteControl extends javax.swing.JFrame {
         setResizable(false);
         setSize(new java.awt.Dimension(150, 220));
         getContentPane().setLayout(new org.netbeans.lib.awtextra.AbsoluteLayout());
+
+        closeBtn.setBackground(new java.awt.Color(255, 51, 51));
+        closeBtn.setFont(new java.awt.Font("Calibri Light", 1, 15)); // NOI18N
+        closeBtn.setForeground(new java.awt.Color(255, 0, 0));
+        closeBtn.setText("X");
+        closeBtn.setBorder(null);
+        closeBtn.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
+        closeBtn.setOpaque(false);
+        closeBtn.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                closeBtnActionPerformed(evt);
+            }
+        });
+        getContentPane().add(closeBtn, new org.netbeans.lib.awtextra.AbsoluteConstraints(130, -1, 20, 30));
 
         backBtn.setFont(new java.awt.Font("Calibri Light", 1, 15)); // NOI18N
         backBtn.setText("Back");
@@ -68,14 +91,18 @@ public class RemoteControl extends javax.swing.JFrame {
         jLabel1.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
         jLabel1.setText("Universal Remote");
         jLabel1.setToolTipText("");
-        getContentPane().add(jLabel1, new org.netbeans.lib.awtextra.AbsoluteConstraints(0, 0, 150, 60));
+        getContentPane().add(jLabel1, new org.netbeans.lib.awtextra.AbsoluteConstraints(0, 20, 150, 40));
         getContentPane().add(timeSlider, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 170, 130, -1));
 
         pack();
     }// </editor-fold>//GEN-END:initComponents
 
     private void nextBtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_nextBtnActionPerformed
-
+        try {
+            request("Next");
+        } catch (Exception ex) {
+            Logger.getLogger(RemoteControl.class.getName()).log(Level.SEVERE, null, ex);
+        }
     }//GEN-LAST:event_nextBtnActionPerformed
 
     private void slideshowBtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_slideshowBtnActionPerformed
@@ -83,15 +110,41 @@ public class RemoteControl extends javax.swing.JFrame {
     }//GEN-LAST:event_slideshowBtnActionPerformed
 
     private void backBtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_backBtnActionPerformed
-        // TODO add your handling code here:
+        try {
+            request("Back");
+        } catch (Exception ex) {
+            Logger.getLogger(RemoteControl.class.getName()).log(Level.SEVERE, null, ex);
+        }
     }//GEN-LAST:event_backBtnActionPerformed
+
+    private void closeBtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_closeBtnActionPerformed
+        try {
+            request("Close");
+            clientSocket.close();
+            dispose();
+            System.exit(0);
+        } catch(Exception e) {
+            System.out.println(e);
+        }
+    }//GEN-LAST:event_closeBtnActionPerformed
 
     /**
      * @param args the command line arguments
      */
-
+    public void request(String request) throws Exception {
+        byte[] sendRequest = new byte[4];        
+        /*int diff = sendRequest.length - request.length();
+        while(diff > 0) {
+            request += " ";
+            diff--;
+        }*/
+        sendRequest = request.getBytes();   
+        DatagramPacket sendPacket = new DatagramPacket(sendRequest, sendRequest.length, IPAddress, 9876);       
+        clientSocket.send(sendPacket);  
+    }
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton backBtn;
+    private javax.swing.JButton closeBtn;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JButton nextBtn;
     private javax.swing.JButton slideshowBtn;

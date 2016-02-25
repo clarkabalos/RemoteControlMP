@@ -30,12 +30,12 @@ public class UDPClient {
         //BufferedReader inFromUser = new BufferedReader(new InputStreamReader(System.in));
         //System.out.println(new File("hi.txt").getAbsoluteFile());
         
-        wholeText = readText("test.txt").toString();
+        wholeText = readText("test.txt").toString(); */
         
 	DatagramSocket clientSocket = new DatagramSocket();       
 	InetAddress IPAddress = InetAddress.getByName("localhost");     
         
-	byte[] sendData = new byte[20];       
+	/*byte[] sendData = new byte[20];       
 	byte[] receiveData = new byte[20];       
         
 	int i = 0;
@@ -70,7 +70,7 @@ public class UDPClient {
         System.out.println("FROM SERVER: " + modifiedSentence);
         clientSocket.close(); */
         
-        RemoteControl rc = new RemoteControl();
+        RemoteControl rc = new RemoteControl(clientSocket, IPAddress);
         rc.setVisible(true);
     }
 }
