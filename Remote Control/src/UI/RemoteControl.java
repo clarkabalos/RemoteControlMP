@@ -1,17 +1,21 @@
 package UI;
 
 import java.net.*;
+import java.util.ArrayList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 public class RemoteControl extends javax.swing.JFrame {
     DatagramSocket clientSocket;
     InetAddress IPAddress;
+    private ArrayList<String> fileNameList;
     
-    public RemoteControl(DatagramSocket _clientSocket, InetAddress _IPAddress) {
+    public RemoteControl(DatagramSocket _clientSocket, InetAddress _IPAddress) throws Exception {
         initComponents();
         clientSocket = _clientSocket;
         IPAddress = _IPAddress;
+        fileNameList = new ArrayList<>();
+        request("Initialize");
         editTime.setVisible(false);
         applyBtn.setVisible(false);
     }
@@ -32,12 +36,14 @@ public class RemoteControl extends javax.swing.JFrame {
         slideshowBtn = new javax.swing.JButton();
         jLabel1 = new javax.swing.JLabel();
         editTime = new javax.swing.JFormattedTextField();
+        jScrollPane1 = new javax.swing.JScrollPane();
+        listFiles = new javax.swing.JTextArea();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
-        setMinimumSize(new java.awt.Dimension(160, 250));
-        setPreferredSize(new java.awt.Dimension(150, 220));
+        setMinimumSize(new java.awt.Dimension(230, 370));
+        setPreferredSize(new java.awt.Dimension(230, 370));
         setResizable(false);
-        setSize(new java.awt.Dimension(150, 220));
+        setSize(new java.awt.Dimension(230, 370));
         getContentPane().setLayout(new org.netbeans.lib.awtextra.AbsoluteLayout());
 
         applyBtn.setFont(new java.awt.Font("Calibri Light", 1, 12)); // NOI18N
@@ -50,7 +56,7 @@ public class RemoteControl extends javax.swing.JFrame {
                 applyBtnActionPerformed(evt);
             }
         });
-        getContentPane().add(applyBtn, new org.netbeans.lib.awtextra.AbsoluteConstraints(80, 170, 50, 40));
+        getContentPane().add(applyBtn, new org.netbeans.lib.awtextra.AbsoluteConstraints(120, 310, 50, 40));
 
         closeBtn.setBackground(new java.awt.Color(255, 51, 51));
         closeBtn.setFont(new java.awt.Font("Calibri Light", 1, 15)); // NOI18N
@@ -64,7 +70,7 @@ public class RemoteControl extends javax.swing.JFrame {
                 closeBtnActionPerformed(evt);
             }
         });
-        getContentPane().add(closeBtn, new org.netbeans.lib.awtextra.AbsoluteConstraints(130, -1, 20, 30));
+        getContentPane().add(closeBtn, new org.netbeans.lib.awtextra.AbsoluteConstraints(200, 0, 30, 30));
 
         backBtn.setFont(new java.awt.Font("Calibri Light", 1, 15)); // NOI18N
         backBtn.setText("Back");
@@ -76,7 +82,7 @@ public class RemoteControl extends javax.swing.JFrame {
                 backBtnActionPerformed(evt);
             }
         });
-        getContentPane().add(backBtn, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 60, 60, 40));
+        getContentPane().add(backBtn, new org.netbeans.lib.awtextra.AbsoluteConstraints(50, 200, 60, 40));
 
         nextBtn.setFont(new java.awt.Font("Calibri Light", 1, 15)); // NOI18N
         nextBtn.setText("Next");
@@ -88,7 +94,7 @@ public class RemoteControl extends javax.swing.JFrame {
                 nextBtnActionPerformed(evt);
             }
         });
-        getContentPane().add(nextBtn, new org.netbeans.lib.awtextra.AbsoluteConstraints(80, 60, 60, 40));
+        getContentPane().add(nextBtn, new org.netbeans.lib.awtextra.AbsoluteConstraints(120, 200, 60, 40));
 
         slideshowBtn.setFont(new java.awt.Font("Calibri Light", 1, 15)); // NOI18N
         slideshowBtn.setText("Start Slideshow");
@@ -100,17 +106,24 @@ public class RemoteControl extends javax.swing.JFrame {
                 slideshowBtnActionPerformed(evt);
             }
         });
-        getContentPane().add(slideshowBtn, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 110, 130, 40));
+        getContentPane().add(slideshowBtn, new org.netbeans.lib.awtextra.AbsoluteConstraints(50, 250, 130, 40));
 
         jLabel1.setFont(new java.awt.Font("Calibri Light", 0, 18)); // NOI18N
         jLabel1.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
         jLabel1.setText("Universal Remote");
         jLabel1.setToolTipText("");
-        getContentPane().add(jLabel1, new org.netbeans.lib.awtextra.AbsoluteConstraints(0, 20, 150, 40));
+        getContentPane().add(jLabel1, new org.netbeans.lib.awtextra.AbsoluteConstraints(40, 10, 150, 40));
 
         editTime.setFormatterFactory(new javax.swing.text.DefaultFormatterFactory(new javax.swing.text.NumberFormatter(new java.text.DecimalFormat("#0"))));
         editTime.setInheritsPopupMenu(true);
-        getContentPane().add(editTime, new org.netbeans.lib.awtextra.AbsoluteConstraints(20, 170, 60, 40));
+        getContentPane().add(editTime, new org.netbeans.lib.awtextra.AbsoluteConstraints(60, 310, 60, 40));
+
+        listFiles.setColumns(20);
+        listFiles.setFont(new java.awt.Font("Calibri Light", 0, 13)); // NOI18N
+        listFiles.setRows(5);
+        jScrollPane1.setViewportView(listFiles);
+
+        getContentPane().add(jScrollPane1, new org.netbeans.lib.awtextra.AbsoluteConstraints(16, 50, 200, 140));
 
         pack();
     }// </editor-fold>//GEN-END:initComponents
@@ -166,22 +179,26 @@ public class RemoteControl extends javax.swing.JFrame {
      * @param args the command line arguments
      */
     public void request(String request) throws Exception {
-        byte[] sendRequest = new byte[4];        
-        /*int diff = sendRequest.length - request.length();
-        while(diff > 0) {
-            request += " ";
-            diff--;
-        }*/
+        byte[] sendRequest = new byte[4];
         sendRequest = request.getBytes();   
         DatagramPacket sendPacket = new DatagramPacket(sendRequest, sendRequest.length, IPAddress, 9876);       
         clientSocket.send(sendPacket);  
     }
+    
+    public void setFileName(String fileName) {
+        fileNameList.add(fileName);
+        listFiles.append(fileName);
+        listFiles.append(System.lineSeparator());
+    }
+    
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton applyBtn;
     private javax.swing.JButton backBtn;
     private javax.swing.JButton closeBtn;
     private javax.swing.JFormattedTextField editTime;
     private javax.swing.JLabel jLabel1;
+    private javax.swing.JScrollPane jScrollPane1;
+    private javax.swing.JTextArea listFiles;
     private javax.swing.JButton nextBtn;
     private javax.swing.JButton slideshowBtn;
     // End of variables declaration//GEN-END:variables

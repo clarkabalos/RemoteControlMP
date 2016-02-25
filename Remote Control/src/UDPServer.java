@@ -5,13 +5,11 @@ import static com.sun.xml.internal.ws.util.VersionUtil.compare;
 
 public class UDPServer {
     public static void main(String args[]) throws Exception {
-        MultimediaApp app = new MultimediaApp();
-        app.setVisible(true);
-        
-        //System.out.println(new File(".").getAbsoluteFile());
         DatagramSocket serverSocket = new DatagramSocket(9876);
         byte[] receiveData = new byte[1024];
-        byte[] sendData = new byte[1024];
+        
+        MultimediaApp app = new MultimediaApp(serverSocket);
+        app.setVisible(true);
         
         while(true) {
             DatagramPacket receivePacket = new DatagramPacket(receiveData, receiveData.length);
@@ -37,6 +35,10 @@ public class UDPServer {
                 String time = trimmedRequest.substring(index + 1,trimmedRequest.length());
                 System.out.println(time);
                 app.setTime(Integer.parseInt(time));
+            } else if(trimmedRequest.equalsIgnoreCase("Initialize")) {
+                InetAddress IPAddress = receivePacket.getAddress();
+                int port = receivePacket.getPort();
+                app.sendFileNames(IPAddress, port);
             } else if(trimmedRequest.equalsIgnoreCase("Close")) {
                 app.dispose();
                 serverSocket.close();

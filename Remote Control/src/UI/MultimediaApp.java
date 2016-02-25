@@ -5,6 +5,8 @@ import java.awt.Image;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
+import java.io.IOException;
+import java.net.*;
 import java.util.ArrayList;
 import javax.swing.ImageIcon;
 import javax.swing.JLabel;
@@ -16,9 +18,11 @@ public class MultimediaApp extends javax.swing.JFrame {
     private JLabel[] label;
     private int index;
     private Timer time; 
+    private DatagramSocket serverSocket; 
             
-    public MultimediaApp() {
+    public MultimediaApp(DatagramSocket _serverSocket) {
         initComponents();
+        serverSocket = _serverSocket;
         Photos = new ArrayList<>();
         showImagesInFolder(new File("C:\\Users\\SVE14112EG\\Github\\RemoteControlMP\\Remote Control\\Photos"));
         showImage(setImageSize(index));
@@ -120,6 +124,17 @@ public class MultimediaApp extends javax.swing.JFrame {
         if(time.isRunning()) {
             time.stop();
             slideshow(i);
+        }
+    }
+    
+    public void sendFileNames(InetAddress IPAddress, int port) throws IOException {
+        byte[] sendData = new byte[1500];
+        for(int i = 0; i < Photos.size(); i++) {
+            String fileName = Photos.get(i).getFileName();
+            System.out.println(fileName);
+            sendData = fileName.getBytes();
+            DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length, IPAddress, port);
+            serverSocket.send(sendPacket);
         }
     }
     

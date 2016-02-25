@@ -72,5 +72,17 @@ public class UDPClient {
         
         RemoteControl rc = new RemoteControl(clientSocket, IPAddress);
         rc.setVisible(true);
+        while(true) {
+            byte[] receiveData = new byte[1500];
+            DatagramPacket receivePacket = new DatagramPacket(receiveData, receiveData.length);
+            clientSocket.receive(receivePacket);
+
+            String trimmedName = null;
+            String fileName = new String(receivePacket.getData(), 0, receivePacket.getLength());
+            trimmedName = fileName.trim();
+            System.out.println(trimmedName);
+            if(!trimmedName.isEmpty())
+                rc.setFileName(fileName);
+         }
     }
 }
