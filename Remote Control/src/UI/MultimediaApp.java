@@ -1,32 +1,45 @@
 package UI;
 
+import Bean.Audio;
 import Bean.Photo;
 import java.awt.Image;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.BufferedInputStream;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.net.*;
 import java.util.ArrayList;
+import javax.imageio.ImageIO;
 import javax.swing.ImageIcon;
 import javax.swing.JLabel;
 import javax.swing.Timer;
+import javazoom.jl.player.Player;
 
 public class MultimediaApp extends javax.swing.JFrame {
+    private ArrayList<Audio> Audios;
     private ArrayList<Photo> Photos;
-    private File[] images;
-    private JLabel[] label;
-    private int index;
-    private Timer time; 
     private DatagramSocket serverSocket; 
+    private File[] files;
+    private int index;
+    private JLabel[] label;
+    private Photo musicIcon; 
+    private Player player;
+    private Thread thread;
+    private Timer time; 
+    
             
     public MultimediaApp(DatagramSocket _serverSocket) {
         initComponents();
         serverSocket = _serverSocket;
+        Audios = new ArrayList<>();
         Photos = new ArrayList<>();
-        showImagesInFolder(new File("C:\\Users\\SVE14112EG\\Github\\RemoteControlMP\\Remote Control\\Photos"));
-        showImage(setImageSize(index));
         index = 0;
+        musicIcon = new Photo("Music Icon", "audio.png");
+        showFilesInFolder(new File("C:\\Users\\SVE14112EG\\Github\\RemoteControlMP\\Remote Control\\Multimedia"));
+        showImage(setImageSize(index));
+        
     }
 
     /**
@@ -63,27 +76,58 @@ public class MultimediaApp extends javax.swing.JFrame {
     /**
      * @param args the command line arguments
      */
-
-    public void showImagesInFolder (File folder) {
+    
+    public void playAudio(String path) {
+        try {
+            BufferedInputStream stream = new BufferedInputStream(new FileInputStream(path));  
+            player = new Player(stream);
+            thread = new Thread(
+                new Runnable(){
+                    public void run(){
+                        try{
+                            player.play();
+                        }catch(Exception e){
+                            e.printStackTrace();
+                        }
+                    }
+                }
+            );
+            thread.start();             
+        } catch (Exception e) {  
+            System.out.println("Problem playing file " + path);  
+            e.printStackTrace();
+        }
+    }
+    
+    public void showFilesInFolder(File folder) {
         Image thumbnail = null;
-        images = folder.listFiles();
-        label = new JLabel[images.length];
-        for(int i = 0; i < images.length; i++) {
-            String imgPath = images[i].getAbsolutePath();
-            int index = imgPath.lastIndexOf('\\');
-            String name = imgPath.substring(index+1);
-            if(name.endsWith("jpg")) {
-                Photo photo = new Photo(name, imgPath);
-                Photos.add(photo);
-                thumbnail = photo.getImage().getScaledInstance(80, 80, Image.SCALE_SMOOTH);
-                ImageIcon icon = new ImageIcon(thumbnail);
+        ImageIcon icon = null;
+        files = folder.listFiles();
+        label = new JLabel[files.length];
+        for(int i = 0; i < files.length; i++) {
+            String path = files[i].getAbsolutePath();
+            int x = path.lastIndexOf('\\');
+            String name = path.substring(x+1);
+            if(name.endsWith("jpg") || name.endsWith("mp3")) {
+                if(name.endsWith("jpg")) {
+                    Photo photo = new Photo(name, path);
+                    Photos.add(photo);
+                    thumbnail = photo.getImage().getScaledInstance(100, 100, Image.SCALE_SMOOTH);
+                } else {
+                    Audio audio = new Audio(name, path);
+                    Photos.add(musicIcon);
+                    Audios.add(audio);
+                    thumbnail = musicIcon.getImage().getScaledInstance(100, 100, Image.SCALE_SMOOTH);
+                }
+                icon = new ImageIcon(thumbnail);
                 label[i] = new JLabel();
                 label[i].setIcon(icon);
                 label[i].setText("");
                 allThumbnails.add(label[i]);
                 allThumbnails.repaint();
                 allThumbnails.updateUI();
-            }
+            } 
+            
         }
     }
     
@@ -92,13 +136,17 @@ public class MultimediaApp extends javax.swing.JFrame {
     }
     
     public void nextImage() {
-        index++;
-        showImage(setImageSize(index));
+        if(index < Photos.size() - 1) {
+            index++;
+            showImage(setImageSize(index));
+        } 
     }
     
     public void prevImage() {
-        index--;
-        showImage(setImageSize(index));
+        if(index > 0) {
+            index--;
+            showImage(setImageSize(index));
+        }
     }
     
     public void slideshow(int i) { 
@@ -120,7 +168,7 @@ public class MultimediaApp extends javax.swing.JFrame {
         return icon; 
     }
     
-    public void setTime(int i) {
+    public void editTimer(int i) {
         if(time.isRunning()) {
             time.stop();
             slideshow(i);
@@ -129,9 +177,13 @@ public class MultimediaApp extends javax.swing.JFrame {
     
     public void sendFileNames(InetAddress IPAddress, int port) throws IOException {
         byte[] sendData = new byte[1500];
+        int audioCheck = 0;
         for(int i = 0; i < Photos.size(); i++) {
             String fileName = Photos.get(i).getFileName();
             System.out.println(fileName);
+            if(fileName.equalsIgnoreCase("Music Icon")) {
+                fileName = Audios.get(audioCheck).getTitle();
+            }
             sendData = fileName.getBytes();
             DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length, IPAddress, port);
             serverSocket.send(sendPacket);

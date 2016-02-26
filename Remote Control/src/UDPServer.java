@@ -34,7 +34,7 @@ public class UDPServer {
                 int index = trimmedRequest.lastIndexOf(":");
                 String time = trimmedRequest.substring(index + 1,trimmedRequest.length());
                 System.out.println(time);
-                app.setTime(Integer.parseInt(time));
+                app.editTimer(Integer.parseInt(time));
             } else if(trimmedRequest.equalsIgnoreCase("Initialize")) {
                 InetAddress IPAddress = receivePacket.getAddress();
                 int port = receivePacket.getPort();
