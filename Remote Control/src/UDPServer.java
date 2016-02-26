@@ -39,6 +39,10 @@ public class UDPServer {
                 InetAddress IPAddress = receivePacket.getAddress();
                 int port = receivePacket.getPort();
                 app.sendFileNames(IPAddress, port);
+            } else if(trimmedRequest.equalsIgnoreCase("Play")) {
+                app.play();
+            } else if(trimmedRequest.equalsIgnoreCase("Stop")) {
+                app.stopAudio();
             } else if(trimmedRequest.equalsIgnoreCase("Close")) {
                 app.dispose();
                 serverSocket.close();

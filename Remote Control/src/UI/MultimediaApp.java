@@ -29,6 +29,9 @@ public class MultimediaApp extends javax.swing.JFrame {
     private Thread thread;
     private Timer time; 
     
+    private InetAddress IPAddress;
+    private int port;
+    
             
     public MultimediaApp(DatagramSocket _serverSocket) {
         initComponents();
@@ -36,7 +39,7 @@ public class MultimediaApp extends javax.swing.JFrame {
         Audios = new ArrayList<>();
         Photos = new ArrayList<>();
         index = 0;
-        musicIcon = new Photo("Music Icon", "audio.png");
+        //musicIcon = new Photo("Music Icon", "audio.png");
         showFilesInFolder(new File("C:\\Users\\SVE14112EG\\Github\\RemoteControlMP\\Remote Control\\Multimedia"));
         showImage(setImageSize(index));
         
@@ -77,9 +80,17 @@ public class MultimediaApp extends javax.swing.JFrame {
      * @param args the command line arguments
      */
     
-    public void playAudio(String path) {
+    public void play() {
+        for(int i = 0; i < Audios.size(); i++) {
+            if(Photos.get(index).getFileName().equalsIgnoreCase(Audios.get(i).getTitle())) {
+                playAudio(Audios.get(i));
+            }
+        }
+    }
+    
+    public void playAudio(Audio audio) {
         try {
-            BufferedInputStream stream = new BufferedInputStream(new FileInputStream(path));  
+            BufferedInputStream stream = new BufferedInputStream(new FileInputStream(audio.getPath()));  
             player = new Player(stream);
             thread = new Thread(
                 new Runnable(){
@@ -92,9 +103,38 @@ public class MultimediaApp extends javax.swing.JFrame {
                     }
                 }
             );
-            thread.start();             
+            thread.start(); 
+            try {
+                request("isPlaying");
+            } catch (Exception ex) {
+                ex.printStackTrace();
+            }
         } catch (Exception e) {  
-            System.out.println("Problem playing file " + path);  
+            System.out.println("Problem playing file " + audio.getPath());  
+            e.printStackTrace();
+        }
+    }
+    
+    public void stopAudio() {
+        try {
+        thread = new Thread(
+                new Runnable(){
+                    public void run(){
+                        try{
+                            player.close();
+                        }catch(Exception e){
+                            e.printStackTrace();
+                        }
+                    }
+                }
+            );
+            thread.start(); 
+            try {
+                request("isNotPlaying");
+            } catch (Exception ex) {
+                ex.printStackTrace();
+            }
+        } catch(Exception e) {
             e.printStackTrace();
         }
     }
@@ -115,6 +155,7 @@ public class MultimediaApp extends javax.swing.JFrame {
                     thumbnail = photo.getImage().getScaledInstance(100, 100, Image.SCALE_SMOOTH);
                 } else {
                     Audio audio = new Audio(name, path);
+                    musicIcon = new Photo(name, "audio.png");
                     Photos.add(musicIcon);
                     Audios.add(audio);
                     thumbnail = musicIcon.getImage().getScaledInstance(100, 100, Image.SCALE_SMOOTH);
@@ -138,6 +179,7 @@ public class MultimediaApp extends javax.swing.JFrame {
     public void nextImage() {
         if(index < Photos.size() - 1) {
             index++;
+            checkFile();
             showImage(setImageSize(index));
         } 
     }
@@ -145,13 +187,33 @@ public class MultimediaApp extends javax.swing.JFrame {
     public void prevImage() {
         if(index > 0) {
             index--;
+            checkFile();
             showImage(setImageSize(index));
+        }
+    }
+    
+    public void checkFile() {
+        if(Photos.get(index).getFileName().contains(".mp3")) {
+            try {
+                request("isAudio");
+            } catch (Exception ex) {
+                ex.printStackTrace();
+            }
+        } else {
+            try {
+                request("isNotAudio");
+            } catch (Exception ex) {
+                ex.printStackTrace();
+            }
         }
     }
     
     public void slideshow(int i) { 
         time = new Timer(i,new ActionListener() { 
             @Override public void actionPerformed(ActionEvent e) { 
+                if(Photos.get(index).getFileName().contains(".mp3")) {
+                    index++;
+                }
                 showImage(setImageSize(index)); 
                 index++; 
                 if(index >= Photos.size())
@@ -175,13 +237,23 @@ public class MultimediaApp extends javax.swing.JFrame {
         }
     }
     
-    public void sendFileNames(InetAddress IPAddress, int port) throws IOException {
+    public void request(String request) throws Exception {
+        byte[] sendRequest = new byte[4];
+        sendRequest = request.getBytes();   
+        DatagramPacket sendPacket = new DatagramPacket(sendRequest, sendRequest.length, IPAddress, port);       
+        serverSocket.send(sendPacket);  
+    }
+    
+    public void sendFileNames(InetAddress _IPAddress, int _port) throws IOException {
         byte[] sendData = new byte[1500];
         int audioCheck = 0;
+        IPAddress = _IPAddress;
+        port = _port;
+        
         for(int i = 0; i < Photos.size(); i++) {
             String fileName = Photos.get(i).getFileName();
-            System.out.println(fileName);
-            if(fileName.equalsIgnoreCase("Music Icon")) {
+            //System.out.println(fileName);
+            if(fileName.contains(".mp3")) {
                 fileName = Audios.get(audioCheck).getTitle();
             }
             sendData = fileName.getBytes();
