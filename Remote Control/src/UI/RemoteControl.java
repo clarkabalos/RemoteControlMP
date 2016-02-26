@@ -44,10 +44,10 @@ public class RemoteControl extends javax.swing.JFrame {
         listFiles = new javax.swing.JTextArea();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
-        setMinimumSize(new java.awt.Dimension(230, 370));
-        setPreferredSize(new java.awt.Dimension(230, 370));
+        setMinimumSize(new java.awt.Dimension(230, 390));
+        setPreferredSize(new java.awt.Dimension(230, 390));
         setResizable(false);
-        setSize(new java.awt.Dimension(230, 370));
+        setSize(new java.awt.Dimension(230, 390));
         getContentPane().setLayout(new org.netbeans.lib.awtextra.AbsoluteLayout());
 
         playBtn.setFont(new java.awt.Font("Calibri Light", 1, 15)); // NOI18N
