@@ -82,9 +82,9 @@ public class UDPClient {
             trimmedName = fileName.trim();
             System.out.println(trimmedName);
             if(!trimmedName.isEmpty()) {
-                if(trimmedName.equalsIgnoreCase("isAudio")) {
+                if(trimmedName.equalsIgnoreCase("isMedia")) {
                     rc.setPlayBtn(true);
-                } else if(trimmedName.equalsIgnoreCase("isNotAudio")) {
+                } else if(trimmedName.equalsIgnoreCase("isNotMedia")) {
                     rc.setPlayBtn(false);
                 } else if(trimmedName.equalsIgnoreCase("isPlaying")) {
                     rc.isPlaying(true);
