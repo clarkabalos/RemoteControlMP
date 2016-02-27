@@ -2,22 +2,22 @@ package UI;
 
 import java.net.*;
 import java.util.ArrayList;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 public class RemoteControl extends javax.swing.JFrame {
     DatagramSocket clientSocket;
     InetAddress IPAddress;
-    private ArrayList<String> fileNameList;
+    private ArrayList<String> fileNameList = new ArrayList<>();
+    private boolean isPlaying = false;
+    private boolean isSlideshowPlaying = false;
     
     public RemoteControl(DatagramSocket _clientSocket, InetAddress _IPAddress) throws Exception {
         initComponents();
         clientSocket = _clientSocket;
         IPAddress = _IPAddress;
-        fileNameList = new ArrayList<>();
         request("Initialize");
         editTime.setVisible(false);
         applyBtn.setVisible(false);
+        playBtn.setVisible(false);
     }
 
     /**
@@ -29,6 +29,7 @@ public class RemoteControl extends javax.swing.JFrame {
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
 
+        playBtn = new javax.swing.JButton();
         applyBtn = new javax.swing.JButton();
         closeBtn = new javax.swing.JButton();
         backBtn = new javax.swing.JButton();
@@ -40,11 +41,23 @@ public class RemoteControl extends javax.swing.JFrame {
         listFiles = new javax.swing.JTextArea();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
-        setMinimumSize(new java.awt.Dimension(230, 370));
-        setPreferredSize(new java.awt.Dimension(230, 370));
+        setMinimumSize(new java.awt.Dimension(230, 390));
+        setPreferredSize(new java.awt.Dimension(230, 390));
         setResizable(false);
-        setSize(new java.awt.Dimension(230, 370));
+        setSize(new java.awt.Dimension(230, 390));
         getContentPane().setLayout(new org.netbeans.lib.awtextra.AbsoluteLayout());
+
+        playBtn.setFont(new java.awt.Font("Calibri Light", 1, 15)); // NOI18N
+        playBtn.setText("Play");
+        playBtn.setBorder(null);
+        playBtn.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
+        playBtn.setOpaque(false);
+        playBtn.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                playBtnActionPerformed(evt);
+            }
+        });
+        getContentPane().add(playBtn, new org.netbeans.lib.awtextra.AbsoluteConstraints(80, 310, 60, 40));
 
         applyBtn.setFont(new java.awt.Font("Calibri Light", 1, 12)); // NOI18N
         applyBtn.setText("Apply");
@@ -132,25 +145,41 @@ public class RemoteControl extends javax.swing.JFrame {
         try {
             request("Next");
         } catch (Exception ex) {
-            Logger.getLogger(RemoteControl.class.getName()).log(Level.SEVERE, null, ex);
+            ex.printStackTrace();
         }
     }//GEN-LAST:event_nextBtnActionPerformed
 
     private void slideshowBtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_slideshowBtnActionPerformed
-        try {
-            request("Slideshow");
-            editTime.setVisible(true);
-            applyBtn.setVisible(true);
-        } catch (Exception ex) {
-            Logger.getLogger(RemoteControl.class.getName()).log(Level.SEVERE, null, ex);
+        if(!isSlideshowPlaying) {
+                try {
+                request("StartSlideshow");
+                slideshowBtn.setText("Stop Slideshow");
+                isSlideshowPlaying = true;
+                playBtn.setVisible(false);
+                editTime.setVisible(true);
+                applyBtn.setVisible(true);
+            } catch (Exception ex) {
+                ex.printStackTrace();
+            }
+        } else {
+            try {
+                request("StopSlideshow");
+                slideshowBtn.setText("Start Slideshow");
+                isSlideshowPlaying = false;
+                editTime.setVisible(false);
+                applyBtn.setVisible(false);
+            } catch (Exception ex) {
+                ex.printStackTrace();
+            }
         }
+        
     }//GEN-LAST:event_slideshowBtnActionPerformed
 
     private void backBtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_backBtnActionPerformed
         try {
             request("Back");
         } catch (Exception ex) {
-            Logger.getLogger(RemoteControl.class.getName()).log(Level.SEVERE, null, ex);
+            ex.printStackTrace();
         }
     }//GEN-LAST:event_backBtnActionPerformed
 
@@ -160,20 +189,38 @@ public class RemoteControl extends javax.swing.JFrame {
             clientSocket.close();
             dispose();
             System.exit(0);
-        } catch(Exception e) {
-            System.out.println(e);
+        } catch(Exception ex) {
+            ex.printStackTrace();
         }
     }//GEN-LAST:event_closeBtnActionPerformed
 
     private void applyBtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_applyBtnActionPerformed
-        //int i = Integer.parseInt(editTime.getText());
         try {
             Integer.parseInt(editTime.getText());
             request("SetTime:" + editTime.getText());
         } catch (Exception ex) {
-            Logger.getLogger(RemoteControl.class.getName()).log(Level.SEVERE, null, ex);
+            ex.printStackTrace();
         }
     }//GEN-LAST:event_applyBtnActionPerformed
+
+    private void playBtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_playBtnActionPerformed
+        if(!isPlaying) {
+            try {
+                playBtn.setText("Stop");
+                request("Play");
+            } catch (Exception ex) {
+                ex.printStackTrace();
+            }
+        } else {
+            try {
+                playBtn.setText("Play");
+                request("Stop");
+            } catch (Exception ex) {
+                ex.printStackTrace();
+            }
+        }
+        
+    }//GEN-LAST:event_playBtnActionPerformed
 
     /**
      * @param args the command line arguments
@@ -191,6 +238,13 @@ public class RemoteControl extends javax.swing.JFrame {
         listFiles.append(System.lineSeparator());
     }
     
+    public void setPlayBtn(boolean b) {
+        playBtn.setVisible(b);
+    }
+    public void isPlaying(boolean b) {
+        isPlaying = b;
+    }
+    
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton applyBtn;
     private javax.swing.JButton backBtn;
@@ -200,6 +254,7 @@ public class RemoteControl extends javax.swing.JFrame {
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JTextArea listFiles;
     private javax.swing.JButton nextBtn;
+    private javax.swing.JButton playBtn;
     private javax.swing.JButton slideshowBtn;
     // End of variables declaration//GEN-END:variables
 }

@@ -28,17 +28,23 @@ public class UDPServer {
                 app.nextImage();
             } else if(trimmedRequest.equalsIgnoreCase("Back")) {
                 app.prevImage();
-            } else if(trimmedRequest.equalsIgnoreCase("Slideshow")) {
+            } else if(trimmedRequest.equalsIgnoreCase("StartSlideshow")) {
                 app.slideshow(500);
+            } else if(trimmedRequest.equalsIgnoreCase("StopSlideshow")) {
+                app.stopSlideshow();
             } else if(trimmedRequest.contains("SetTime")) {
                 int index = trimmedRequest.lastIndexOf(":");
                 String time = trimmedRequest.substring(index + 1,trimmedRequest.length());
                 System.out.println(time);
-                app.setTime(Integer.parseInt(time));
+                app.editTimer(Integer.parseInt(time));
             } else if(trimmedRequest.equalsIgnoreCase("Initialize")) {
                 InetAddress IPAddress = receivePacket.getAddress();
                 int port = receivePacket.getPort();
                 app.sendFileNames(IPAddress, port);
+            } else if(trimmedRequest.equalsIgnoreCase("Play")) {
+                app.play();
+            } else if(trimmedRequest.equalsIgnoreCase("Stop")) {
+                app.stop();
             } else if(trimmedRequest.equalsIgnoreCase("Close")) {
                 app.dispose();
                 serverSocket.close();

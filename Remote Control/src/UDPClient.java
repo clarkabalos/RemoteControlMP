@@ -81,8 +81,19 @@ public class UDPClient {
             String fileName = new String(receivePacket.getData(), 0, receivePacket.getLength());
             trimmedName = fileName.trim();
             System.out.println(trimmedName);
-            if(!trimmedName.isEmpty())
-                rc.setFileName(fileName);
+            if(!trimmedName.isEmpty()) {
+                if(trimmedName.equalsIgnoreCase("isMedia")) {
+                    rc.setPlayBtn(true);
+                } else if(trimmedName.equalsIgnoreCase("isNotMedia")) {
+                    rc.setPlayBtn(false);
+                } else if(trimmedName.equalsIgnoreCase("isPlaying")) {
+                    rc.isPlaying(true);
+                } else if(trimmedName.equalsIgnoreCase("isNotPlaying")) {
+                    rc.isPlaying(false);
+                } else
+                    rc.setFileName(fileName);
+            }
+                
          }
     }
 }
