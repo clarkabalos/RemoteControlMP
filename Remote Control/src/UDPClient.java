@@ -80,7 +80,6 @@ public class UDPClient {
             String trimmedName = null;
             String fileName = new String(receivePacket.getData(), 0, receivePacket.getLength());
             trimmedName = fileName.trim();
-            System.out.println(trimmedName);
             if(!trimmedName.isEmpty()) {
                 if(trimmedName.equalsIgnoreCase("isMedia")) {
                     rc.setPlayBtn(true);

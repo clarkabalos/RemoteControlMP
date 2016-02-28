@@ -45,7 +45,7 @@ public class MultimediaApp extends javax.swing.JFrame {
     public MultimediaApp(DatagramSocket _serverSocket) throws Exception {
         initComponents();
         serverSocket = _serverSocket;
-        NativeLibrary.addSearchPath(RuntimeUtil.getLibVlcLibraryName(), searchPath + "\\Libraries\\VLC Plugins");
+        NativeLibrary.addSearchPath(RuntimeUtil.getLibVlcLibraryName(), searchPath + "\\Libraries\\VLC Plugins\\64-bit");
         showFilesInFolder(new File(searchPath + "\\Multimedia"));
         showImage(setImageSize(index));
         initializeMediaPlayer();

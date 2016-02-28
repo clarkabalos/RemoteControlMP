@@ -1,7 +1,5 @@
-import java.io.*;
 import java.net.*;
 import UI.MultimediaApp;
-import static com.sun.xml.internal.ws.util.VersionUtil.compare;
 
 public class UDPServer {
     public static void main(String args[]) throws Exception {
