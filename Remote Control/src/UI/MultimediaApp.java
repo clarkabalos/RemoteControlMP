@@ -69,20 +69,28 @@ public class MultimediaApp extends javax.swing.JFrame {
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         getContentPane().setLayout(new org.netbeans.lib.awtextra.AbsoluteLayout());
 
+        jScrollPane1.setBorder(null);
+        jScrollPane1.setVerticalScrollBarPolicy(javax.swing.ScrollPaneConstants.VERTICAL_SCROLLBAR_NEVER);
+        jScrollPane1.setMinimumSize(new java.awt.Dimension(720, 100));
+        jScrollPane1.setPreferredSize(new java.awt.Dimension(720, 100));
+
+        allThumbnails.setBorder(javax.swing.BorderFactory.createEtchedBorder());
+        allThumbnails.setForeground(new java.awt.Color(240, 240, 240));
         jScrollPane1.setViewportView(allThumbnails);
 
-        getContentPane().add(jScrollPane1, new org.netbeans.lib.awtextra.AbsoluteConstraints(0, 60, 720, 100));
+        getContentPane().add(jScrollPane1, new org.netbeans.lib.awtextra.AbsoluteConstraints(0, 50, 720, 100));
 
         jLabel1.setBackground(new java.awt.Color(153, 153, 153));
-        jLabel1.setFont(new java.awt.Font("Calibri Light", 1, 24)); // NOI18N
+        jLabel1.setFont(new java.awt.Font("Segoe UI", 0, 18)); // NOI18N
         jLabel1.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
         jLabel1.setText("Multimedia Application");
+        jLabel1.setToolTipText("");
         getContentPane().add(jLabel1, new org.netbeans.lib.awtextra.AbsoluteConstraints(4, 4, 710, 50));
 
         panel.setBackground(new java.awt.Color(0, 0, 0));
         panel.setLayout(new java.awt.BorderLayout());
-        getContentPane().add(panel, new org.netbeans.lib.awtextra.AbsoluteConstraints(0, 170, 720, 430));
-        getContentPane().add(imageViewer, new org.netbeans.lib.awtextra.AbsoluteConstraints(0, 170, 720, 430));
+        getContentPane().add(panel, new org.netbeans.lib.awtextra.AbsoluteConstraints(0, 150, 720, 440));
+        getContentPane().add(imageViewer, new org.netbeans.lib.awtextra.AbsoluteConstraints(0, 150, 720, 440));
 
         pack();
     }// </editor-fold>//GEN-END:initComponents

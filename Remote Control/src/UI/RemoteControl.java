@@ -31,7 +31,6 @@ public class RemoteControl extends javax.swing.JFrame {
 
         playBtn = new javax.swing.JButton();
         applyBtn = new javax.swing.JButton();
-        closeBtn = new javax.swing.JButton();
         backBtn = new javax.swing.JButton();
         nextBtn = new javax.swing.JButton();
         slideshowBtn = new javax.swing.JButton();
@@ -45,6 +44,11 @@ public class RemoteControl extends javax.swing.JFrame {
         setPreferredSize(new java.awt.Dimension(230, 390));
         setResizable(false);
         setSize(new java.awt.Dimension(230, 390));
+        addWindowListener(new java.awt.event.WindowAdapter() {
+            public void windowClosing(java.awt.event.WindowEvent evt) {
+                closeWindow(evt);
+            }
+        });
         getContentPane().setLayout(new org.netbeans.lib.awtextra.AbsoluteLayout());
 
         playBtn.setFont(new java.awt.Font("Calibri Light", 1, 15)); // NOI18N
@@ -71,25 +75,10 @@ public class RemoteControl extends javax.swing.JFrame {
         });
         getContentPane().add(applyBtn, new org.netbeans.lib.awtextra.AbsoluteConstraints(120, 310, 50, 40));
 
-        closeBtn.setBackground(new java.awt.Color(255, 51, 51));
-        closeBtn.setFont(new java.awt.Font("Calibri Light", 1, 15)); // NOI18N
-        closeBtn.setForeground(new java.awt.Color(255, 0, 0));
-        closeBtn.setText("X");
-        closeBtn.setBorder(null);
-        closeBtn.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
-        closeBtn.setOpaque(false);
-        closeBtn.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                closeBtnActionPerformed(evt);
-            }
-        });
-        getContentPane().add(closeBtn, new org.netbeans.lib.awtextra.AbsoluteConstraints(200, 0, 30, 30));
-
         backBtn.setFont(new java.awt.Font("Calibri Light", 1, 15)); // NOI18N
         backBtn.setText("Back");
         backBtn.setBorder(null);
         backBtn.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
-        backBtn.setOpaque(false);
         backBtn.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 backBtnActionPerformed(evt);
@@ -128,6 +117,7 @@ public class RemoteControl extends javax.swing.JFrame {
         getContentPane().add(jLabel1, new org.netbeans.lib.awtextra.AbsoluteConstraints(40, 10, 150, 40));
 
         editTime.setFormatterFactory(new javax.swing.text.DefaultFormatterFactory(new javax.swing.text.NumberFormatter(new java.text.DecimalFormat("#0"))));
+        editTime.setText("1000");
         editTime.setInheritsPopupMenu(true);
         getContentPane().add(editTime, new org.netbeans.lib.awtextra.AbsoluteConstraints(60, 310, 60, 40));
 
@@ -143,6 +133,10 @@ public class RemoteControl extends javax.swing.JFrame {
 
     private void nextBtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_nextBtnActionPerformed
         try {
+            if(isPlaying) {
+                playBtn.setText("Play");
+                request("Stop");
+            }
             request("Next");
         } catch (Exception ex) {
             ex.printStackTrace();
@@ -151,7 +145,7 @@ public class RemoteControl extends javax.swing.JFrame {
 
     private void slideshowBtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_slideshowBtnActionPerformed
         if(!isSlideshowPlaying) {
-                try {
+            try {
                 request("StartSlideshow");
                 slideshowBtn.setText("Stop Slideshow");
                 isSlideshowPlaying = true;
@@ -177,22 +171,15 @@ public class RemoteControl extends javax.swing.JFrame {
 
     private void backBtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_backBtnActionPerformed
         try {
+            if(isPlaying) {
+                playBtn.setText("Play");
+                request("Stop");
+            }
             request("Back");
         } catch (Exception ex) {
             ex.printStackTrace();
         }
     }//GEN-LAST:event_backBtnActionPerformed
-
-    private void closeBtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_closeBtnActionPerformed
-        try {
-            request("Close");
-            clientSocket.close();
-            dispose();
-            System.exit(0);
-        } catch(Exception ex) {
-            ex.printStackTrace();
-        }
-    }//GEN-LAST:event_closeBtnActionPerformed
 
     private void applyBtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_applyBtnActionPerformed
         try {
@@ -219,8 +206,18 @@ public class RemoteControl extends javax.swing.JFrame {
                 ex.printStackTrace();
             }
         }
-        
     }//GEN-LAST:event_playBtnActionPerformed
+
+    private void closeWindow(java.awt.event.WindowEvent evt) {//GEN-FIRST:event_closeWindow
+        try {
+            request("Close");
+            clientSocket.close();
+            dispose();
+            System.exit(0);
+        } catch(Exception ex) {
+            ex.printStackTrace();
+        }
+    }//GEN-LAST:event_closeWindow
 
     /**
      * @param args the command line arguments
@@ -241,14 +238,14 @@ public class RemoteControl extends javax.swing.JFrame {
     public void setPlayBtn(boolean b) {
         playBtn.setVisible(b);
     }
+    
     public void isPlaying(boolean b) {
         isPlaying = b;
     }
-    
+        
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton applyBtn;
     private javax.swing.JButton backBtn;
-    private javax.swing.JButton closeBtn;
     private javax.swing.JFormattedTextField editTime;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JScrollPane jScrollPane1;
