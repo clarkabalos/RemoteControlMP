@@ -1,7 +1,14 @@
 package UI;
 
+import Bean.Photo;
+import java.awt.image.BufferedImage;
+import java.io.ByteArrayInputStream;
+import java.io.File;
+import java.io.InputStream;
+import java.io.ObjectInputStream;
 import java.net.*;
 import java.util.ArrayList;
+import javax.imageio.ImageIO;
 
 public class RemoteControl extends javax.swing.JFrame {
     private DatagramSocket clientSocket;
@@ -237,11 +244,73 @@ public class RemoteControl extends javax.swing.JFrame {
             return;
         }
         
-        byte[] receiveData = new byte[1500];
-        DatagramPacket receivePacket = new DatagramPacket(receiveData, receiveData.length);
-        clientSocket.receive(receivePacket);
-
-        String fileName = new String(receivePacket.getData(), 0, receivePacket.getLength());
+        
+        byte[] receiveData1 = new byte[1500];
+        DatagramPacket receivePacket1 = new DatagramPacket(receiveData1, receiveData1.length);
+        clientSocket.receive(receivePacket1);
+        String sentence = new String(receivePacket1.getData());
+        int length = Integer.parseInt(sentence.trim());
+        int copylength = length;
+        int i = 0;
+        int j = receiveData1.length-1;
+        System.out.println(j);
+        int count = 1;
+        byte[] data2 = new byte[length];
+        while(length > 0) {
+            byte[] receiveData2 = new byte[1500];
+            DatagramPacket receivePacket2 = new DatagramPacket(receiveData2, receiveData2.length);
+            clientSocket.receive(receivePacket2);
+            byte[] data = receivePacket2.getData();
+            if(j < copylength) {
+                System.out.println("First");
+                System.arraycopy(data, 0, data2, i, receiveData2.length);
+            } else {
+                System.out.println("Second");
+                int diff = j - copylength;
+                j -= diff;
+                System.out.println(diff);
+                System.arraycopy(data, 0, data2, i, receiveData2.length-diff);
+                System.out.println("FINALLY");
+            }
+            
+            System.out.println("Data: " + data.length + " x " + count);
+            
+            i = j;
+            j += 1500;
+            length -= 1500; 
+            count++;
+            System.out.println("Length: " + length);
+        }
+        System.out.println("STOP");
+        //System.arraycopy(receiveData2, 0, data, 0, receiveData2.length);
+        //System.arraycopy(b, 0, c, receiveData2.length, b.length);
+            //byte[] data2 = data.getData();
+            InputStream inputStream = new ByteArrayInputStream(data2);
+            BufferedImage bImageFromConvert = ImageIO.read(inputStream);
+            String searchPath = new File("").getAbsolutePath();
+            ImageIO.write(bImageFromConvert, "jpg", new File(searchPath + "\\TestWrite\\test2.jpg"));
+        /*Photo photo = null;
+        ByteArrayInputStream in = new ByteArrayInputStream(receivePacket.getData());
+        ObjectInputStream is = new ObjectInputStream(in);
+        photo = (Photo) is.readObject();	
+        String fileName = photo.getFileName();
+        System.out.println("File Name : " + fileName);*/
+        
+        /*FileOutputStream fileOut = new FileOutputStream("D:\\" + fileName);
+        InputStream fileIn = receiveSocket.getInputStream();
+        BufferedOutputStream fileBuffer = new BufferedOutputStream(fileOut);
+        int count;
+        int sum = 0;
+        while ((count = fileIn.read(data)) > 0) {
+            sum += count;
+            fileBuffer.write(data, 0, count);
+            System.out.println("Data received : " + sum);
+            fileBuffer.flush();
+        }
+        System.out.println("File Received...");
+        fileBuffer.close();
+        fileIn.close();*/
+        /*String fileName = new String(receivePacket.getData(), 0, receivePacket.getLength());
         String trimmedName = fileName.trim();
         
         if(trimmedName.contains(".mp3") || trimmedName.contains(".mp4")) {
@@ -250,7 +319,7 @@ public class RemoteControl extends javax.swing.JFrame {
             playBtn.setVisible(false);
         }
         
-        fileNameLabel.setText(trimmedName);
+        fileNameLabel.setText(trimmedName); */
     }
     
     // Variables declaration - do not modify//GEN-BEGIN:variables

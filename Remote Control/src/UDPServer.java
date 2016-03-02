@@ -42,7 +42,8 @@ public class UDPServer {
                 app.editTimer(Integer.parseInt(time));
                 app.sendToClient(IPAddress, port);
             } else if(trimmedRequest.equalsIgnoreCase("Initialize")) {
-                app.sendFileName(IPAddress, port);
+                //app.sendFileName(IPAddress, port);
+                app.sendPreview(IPAddress, port);
                 //InetAddress IPAddress = receivePacket.getAddress();
                 //int port = receivePacket.getPort();
                 //app.sendFileNames(IPAddress, port);
