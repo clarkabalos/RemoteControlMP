@@ -72,7 +72,7 @@ public class UDPClient {
         
         RemoteControl rc = new RemoteControl(clientSocket, IPAddress);
         rc.setVisible(true);
-        while(true) {
+        /*while(true) {
             byte[] receiveData = new byte[1500];
             DatagramPacket receivePacket = new DatagramPacket(receiveData, receiveData.length);
             clientSocket.receive(receivePacket);
@@ -93,6 +93,6 @@ public class UDPClient {
                     rc.setFileName(fileName);
             }
                 
-         }
+         }*/
     }
 }

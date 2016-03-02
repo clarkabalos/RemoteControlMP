@@ -38,8 +38,7 @@ public class MultimediaApp extends javax.swing.JFrame {
     
     //socket programming-related vars
     private DatagramSocket serverSocket; 
-    private InetAddress IPAddress;
-    private int port;
+    
     
             
     public MultimediaApp(DatagramSocket _serverSocket) throws Exception {
@@ -99,48 +98,6 @@ public class MultimediaApp extends javax.swing.JFrame {
      * @param args the command line arguments
      */
     
-    public void initializeMediaPlayer() { 
-        canvas = new Canvas();
-        panel.add(canvas);
-        panel.repaint();
-
-        mediaPlayerFactory = new MediaPlayerFactory();
-        mediaPlayer = mediaPlayerFactory.newEmbeddedMediaPlayer();
-        CanvasVideoSurface videoSurface = mediaPlayerFactory.newVideoSurface(canvas);
-        mediaPlayer.setVideoSurface(videoSurface);
-        panel.setVisible(false);
-    }
-        
-    public void play() {
-        for(int i = 0; i < Multimedia.size(); i++) {
-            String check = Photos.get(index).getFileName();
-            if(check.equals(Multimedia.get(i).getTitle())) {
-                if(check.contains(".mp4")) {
-                    panel.setVisible(true);
-                } else {
-                    panel.setVisible(false);
-                }
-                mediaPlayer.playMedia(Multimedia.get(i).getPath());
-                try {
-                    request("isPlaying");
-                } catch (Exception ex) {
-                    ex.printStackTrace();
-                }
-                return;
-            }
-        }
-    }
-    
-    public void stop() {
-        mediaPlayer.stop();
-        panel.setVisible(false);
-        try {
-            request("isNotPlaying");
-        } catch (Exception ex) {
-            ex.printStackTrace();
-        }
-    }
-    
     public void showFilesInFolder(File folder) {
         Image thumbnail = null;
         ImageIcon icon = null;
@@ -185,7 +142,6 @@ public class MultimediaApp extends javax.swing.JFrame {
     public void nextImage() {
         if(index < Photos.size() - 1) {
             index++;
-            checkFile();
             showImage(setImageSize(index));
         } 
     }
@@ -193,32 +149,70 @@ public class MultimediaApp extends javax.swing.JFrame {
     public void prevImage() {
         if(index > 0) {
             index--;
-            checkFile();
             showImage(setImageSize(index));
         }
     }
     
-    public void checkFile() {
-        String check = Photos.get(index).getFileName();
-        if(check.contains(".mp3") || check.contains(".mp4")) {
-            try {
-                request("isMedia");
-            } catch (Exception ex) {
-                ex.printStackTrace();
-            }
-        } else {
-            try {
-                request("isNotMedia");
-            } catch (Exception ex) {
-                ex.printStackTrace();
+    public void initializeMediaPlayer() { 
+        canvas = new Canvas();
+        panel.add(canvas);
+        panel.repaint();
+
+        mediaPlayerFactory = new MediaPlayerFactory();
+        mediaPlayer = mediaPlayerFactory.newEmbeddedMediaPlayer();
+        CanvasVideoSurface videoSurface = mediaPlayerFactory.newVideoSurface(canvas);
+        mediaPlayer.setVideoSurface(videoSurface);
+        panel.setVisible(false);
+    }
+        
+    public void play() {
+        for(int i = 0; i < Multimedia.size(); i++) {
+            String check = Photos.get(index).getFileName();
+            if(check.equals(Multimedia.get(i).getTitle())) {
+                if(check.contains(".mp4")) {
+                    panel.setVisible(true);
+                } else {
+                    panel.setVisible(false);
+                }
+                
+                mediaPlayer.playMedia(Multimedia.get(i).getPath());
+                return;
             }
         }
     }
     
+    public void stop() {
+        mediaPlayer.stop();
+        panel.setVisible(false);
+    }
+    
+    public void sendFileName(InetAddress _IPAddress, int _port) throws IOException {
+        byte[] sendData = new byte[1500];
+        String fileName = Photos.get(index).getFileName();
+        sendData = fileName.getBytes();
+        DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length, _IPAddress, _port);
+        serverSocket.send(sendPacket);
+    }
+    
+    public void sendToClient(InetAddress _IPAddress, int _port) throws IOException {
+        byte[] sendData = new byte[1500];
+        String temp = "Slideshow is currently ongoing.";
+        sendData = temp.getBytes();
+        DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length, _IPAddress, _port);
+        serverSocket.send(sendPacket);
+    }
+    
     public void slideshow(int i) { 
+        /*final InetAddress IPAddress = _IPAddress;
+        final int port = _port;*/
         time = new Timer(i,new ActionListener() { 
             @Override public void actionPerformed(ActionEvent e) { 
                 String check = Photos.get(index).getFileName();
+                /*try {
+                    sendFileName(IPAddress, port);
+                } catch (IOException ex) {
+                    Logger.getLogger(MultimediaApp.class.getName()).log(Level.SEVERE, null, ex);
+                }*/
                 if(check.contains(".jpg")) {
                     showImage(setImageSize(index));
                     index++;
@@ -247,26 +241,6 @@ public class MultimediaApp extends javax.swing.JFrame {
         if(time.isRunning()) {
             time.stop();
             slideshow(i);
-        }
-    }
-    
-    public void request(String request) throws Exception {
-        byte[] sendRequest = new byte[4];
-        sendRequest = request.getBytes();   
-        DatagramPacket sendPacket = new DatagramPacket(sendRequest, sendRequest.length, IPAddress, port);       
-        serverSocket.send(sendPacket);  
-    }
-    
-    public void sendFileNames(InetAddress _IPAddress, int _port) throws IOException {
-        byte[] sendData = new byte[1500];
-        IPAddress = _IPAddress;
-        port = _port;
-        
-        for(int i = 0; i < Photos.size(); i++) {
-            String fileName = Photos.get(i).getFileName();
-            sendData = fileName.getBytes();
-            DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length, IPAddress, port);
-            serverSocket.send(sendPacket);
         }
     }
     

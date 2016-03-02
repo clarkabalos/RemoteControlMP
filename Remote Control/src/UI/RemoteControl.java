@@ -4,9 +4,8 @@ import java.net.*;
 import java.util.ArrayList;
 
 public class RemoteControl extends javax.swing.JFrame {
-    DatagramSocket clientSocket;
-    InetAddress IPAddress;
-    private ArrayList<String> fileNameList = new ArrayList<>();
+    private DatagramSocket clientSocket;
+    private InetAddress IPAddress;
     private boolean isPlaying = false;
     private boolean isSlideshowPlaying = false;
     
@@ -14,7 +13,7 @@ public class RemoteControl extends javax.swing.JFrame {
         initComponents();
         clientSocket = _clientSocket;
         IPAddress = _IPAddress;
-        request("Initialize");
+        requestToServer("Initialize");
         editTime.setVisible(false);
         applyBtn.setVisible(false);
         playBtn.setVisible(false);
@@ -36,8 +35,8 @@ public class RemoteControl extends javax.swing.JFrame {
         slideshowBtn = new javax.swing.JButton();
         jLabel1 = new javax.swing.JLabel();
         editTime = new javax.swing.JFormattedTextField();
-        jScrollPane1 = new javax.swing.JScrollPane();
-        listFiles = new javax.swing.JTextArea();
+        fileNameLabel = new javax.swing.JLabel();
+        imagePreview = new javax.swing.JLabel();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         setMinimumSize(new java.awt.Dimension(230, 390));
@@ -121,12 +120,13 @@ public class RemoteControl extends javax.swing.JFrame {
         editTime.setInheritsPopupMenu(true);
         getContentPane().add(editTime, new org.netbeans.lib.awtextra.AbsoluteConstraints(60, 310, 60, 40));
 
-        listFiles.setColumns(20);
-        listFiles.setFont(new java.awt.Font("Calibri Light", 0, 13)); // NOI18N
-        listFiles.setRows(5);
-        jScrollPane1.setViewportView(listFiles);
+        fileNameLabel.setFont(new java.awt.Font("Calibri Light", 0, 14)); // NOI18N
+        fileNameLabel.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
+        getContentPane().add(fileNameLabel, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 50, 210, 20));
 
-        getContentPane().add(jScrollPane1, new org.netbeans.lib.awtextra.AbsoluteConstraints(16, 50, 200, 140));
+        imagePreview.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
+        imagePreview.setBorder(javax.swing.BorderFactory.createEtchedBorder());
+        getContentPane().add(imagePreview, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 70, 210, 120));
 
         pack();
     }// </editor-fold>//GEN-END:initComponents
@@ -135,9 +135,10 @@ public class RemoteControl extends javax.swing.JFrame {
         try {
             if(isPlaying) {
                 playBtn.setText("Play");
-                request("Stop");
+                isPlaying = false;
+                requestToServer("Stop");
             }
-            request("Next");
+            requestToServer("Next");
         } catch (Exception ex) {
             ex.printStackTrace();
         }
@@ -146,10 +147,10 @@ public class RemoteControl extends javax.swing.JFrame {
     private void slideshowBtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_slideshowBtnActionPerformed
         if(!isSlideshowPlaying) {
             try {
-                request("StartSlideshow");
+                requestToServer("StartSlideshow");
                 slideshowBtn.setText("Stop Slideshow");
                 isSlideshowPlaying = true;
-                playBtn.setVisible(false);
+                //playBtn.setVisible(false);
                 editTime.setVisible(true);
                 applyBtn.setVisible(true);
             } catch (Exception ex) {
@@ -157,7 +158,7 @@ public class RemoteControl extends javax.swing.JFrame {
             }
         } else {
             try {
-                request("StopSlideshow");
+                requestToServer("StopSlideshow");
                 slideshowBtn.setText("Start Slideshow");
                 isSlideshowPlaying = false;
                 editTime.setVisible(false);
@@ -173,9 +174,10 @@ public class RemoteControl extends javax.swing.JFrame {
         try {
             if(isPlaying) {
                 playBtn.setText("Play");
-                request("Stop");
+                isPlaying = false;
+                requestToServer("Stop");
             }
-            request("Back");
+            requestToServer("Back");
         } catch (Exception ex) {
             ex.printStackTrace();
         }
@@ -184,7 +186,7 @@ public class RemoteControl extends javax.swing.JFrame {
     private void applyBtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_applyBtnActionPerformed
         try {
             Integer.parseInt(editTime.getText());
-            request("SetTime:" + editTime.getText());
+            requestToServer("SetTime:" + editTime.getText());
         } catch (Exception ex) {
             ex.printStackTrace();
         }
@@ -194,14 +196,16 @@ public class RemoteControl extends javax.swing.JFrame {
         if(!isPlaying) {
             try {
                 playBtn.setText("Stop");
-                request("Play");
+                isPlaying = true;
+                requestToServer("Play");
             } catch (Exception ex) {
                 ex.printStackTrace();
             }
         } else {
             try {
                 playBtn.setText("Play");
-                request("Stop");
+                isPlaying = false;
+                requestToServer("Stop");
             } catch (Exception ex) {
                 ex.printStackTrace();
             }
@@ -210,8 +214,7 @@ public class RemoteControl extends javax.swing.JFrame {
 
     private void closeWindow(java.awt.event.WindowEvent evt) {//GEN-FIRST:event_closeWindow
         try {
-            request("Close");
-            clientSocket.close();
+            requestToServer("Close");
             dispose();
             System.exit(0);
         } catch(Exception ex) {
@@ -222,34 +225,41 @@ public class RemoteControl extends javax.swing.JFrame {
     /**
      * @param args the command line arguments
      */
-    public void request(String request) throws Exception {
-        byte[] sendRequest = new byte[4];
+    
+    public void requestToServer(String request) throws Exception {
+        byte[] sendRequest = new byte[1500];
         sendRequest = request.getBytes();   
         DatagramPacket sendPacket = new DatagramPacket(sendRequest, sendRequest.length, IPAddress, 9876);       
         clientSocket.send(sendPacket);  
-    }
-    
-    public void setFileName(String fileName) {
-        fileNameList.add(fileName);
-        listFiles.append(fileName);
-        listFiles.append(System.lineSeparator());
-    }
-    
-    public void setPlayBtn(boolean b) {
-        playBtn.setVisible(b);
-    }
-    
-    public void isPlaying(boolean b) {
-        isPlaying = b;
-    }
         
+        if(request.equalsIgnoreCase("Close")) {
+            clientSocket.close();
+            return;
+        }
+        
+        byte[] receiveData = new byte[1500];
+        DatagramPacket receivePacket = new DatagramPacket(receiveData, receiveData.length);
+        clientSocket.receive(receivePacket);
+
+        String fileName = new String(receivePacket.getData(), 0, receivePacket.getLength());
+        String trimmedName = fileName.trim();
+        
+        if(trimmedName.contains(".mp3") || trimmedName.contains(".mp4")) {
+            playBtn.setVisible(true);
+        } else {
+            playBtn.setVisible(false);
+        }
+        
+        fileNameLabel.setText(trimmedName);
+    }
+    
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton applyBtn;
     private javax.swing.JButton backBtn;
     private javax.swing.JFormattedTextField editTime;
+    private javax.swing.JLabel fileNameLabel;
+    private javax.swing.JLabel imagePreview;
     private javax.swing.JLabel jLabel1;
-    private javax.swing.JScrollPane jScrollPane1;
-    private javax.swing.JTextArea listFiles;
     private javax.swing.JButton nextBtn;
     private javax.swing.JButton playBtn;
     private javax.swing.JButton slideshowBtn;
