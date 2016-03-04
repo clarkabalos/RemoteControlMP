@@ -1,19 +1,20 @@
 package UI;
 
 import Bean.Media;
-import Bean.Photo;
+import Bean.Multimedia;
 import com.sun.jna.NativeLibrary;
 import java.awt.Canvas;
 import java.awt.Image;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.image.BufferedImage;
-import java.io.BufferedInputStream;
+import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.FileReader;
 import java.io.IOException;
 import java.io.ObjectOutputStream;
 import java.net.*;
@@ -21,7 +22,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import javax.imageio.ImageIO;
 import javax.swing.ImageIcon;
-import javax.swing.JLabel;
+//import javax.swing.JLabel;
 import javax.swing.Timer;
 import uk.co.caprica.vlcj.player.MediaPlayerFactory;
 import uk.co.caprica.vlcj.player.embedded.EmbeddedMediaPlayer;
@@ -30,11 +31,11 @@ import uk.co.caprica.vlcj.runtime.RuntimeUtil;
 
 public class MultimediaApp extends javax.swing.JFrame {
     //list of multimedia files
-    private ArrayList<Media> Multimedia = new ArrayList<>();
-    private ArrayList<Photo> Photos = new ArrayList<>();
+    //private ArrayList<Media> Multimedia = new ArrayList<>();
+    private ArrayList<Multimedia> FilesInFolder = new ArrayList<>();
     
-    private File[] files;
-    private JLabel[] label;
+    //private File[] files;
+    //private JLabel[] label;
     private int index = 0;
     private Timer time;
     
@@ -44,12 +45,8 @@ public class MultimediaApp extends javax.swing.JFrame {
     private Canvas canvas;
     
     private final String searchPath = new File("").getAbsolutePath();
-    
-    //socket programming-related vars
     private DatagramSocket serverSocket; 
     
-    
-            
     public MultimediaApp(DatagramSocket _serverSocket) throws Exception {
         initComponents();
         serverSocket = _serverSocket;
@@ -107,49 +104,52 @@ public class MultimediaApp extends javax.swing.JFrame {
      * @param args the command line arguments
      */
     
-    public void showFilesInFolder(File folder) {
+    public void showFilesInFolder(File folder) throws IOException {
         Image thumbnail = null;
-        ImageIcon icon = null;
-        Photo temp = null;
-        files = folder.listFiles();
-        label = new JLabel[files.length];
+        String type = "";
+        //ImageIcon icon = null;
+        File[] files = folder.listFiles();
+        //label = new JLabel[files.length];
         for(int i = 0; i < files.length; i++) {
             String path = files[i].getAbsolutePath();
+            long size = files[i].length();
             int x = path.lastIndexOf('\\');
             String name = path.substring(x+1);
-            if(name.endsWith("jpg") || name.endsWith("mp3") || name.endsWith("mp4")) {
-                if(name.endsWith("jpg")) {
-                    Photo photo = new Photo(name, path);
-                    Photos.add(photo);
+            if(name.endsWith("jpg") || name.endsWith(".png") || name.endsWith("mp3") || name.endsWith("mp4")) {
+                if(name.endsWith("jpg") || name.endsWith(".png")) {
                     try{
-                        thumbnail = ImageIO.read(new File(Photos.get(i).getPath())).getScaledInstance(90, 90, Image.SCALE_SMOOTH);
+                        thumbnail = ImageIO.read(new File(path)).getScaledInstance(90, 90, Image.SCALE_SMOOTH);
+                        Multimedia file = new Multimedia(name, path);
+                        //file.setThumbnail(thumbnail);
+                        file.setType("Image");
+                        file.setLength(size);
+                        FilesInFolder.add(file);
                     }catch(IOException e){
                       System.out.println(e);
                     }
                     //thumbnail = photo.getImage().getScaledInstance(90, 90, Image.SCALE_SMOOTH);
                 } else {
                     if(name.endsWith("mp3")) {
-                        temp = new Photo(name, "audio.png");
+                        thumbnail = ImageIO.read(new File("audio.png")).getScaledInstance(90, 90, Image.SCALE_SMOOTH);
+                        type = "Audio";
                     } else {
-                        temp = new Photo(name, "video.png");
+                        thumbnail = ImageIO.read(new File("video.png")).getScaledInstance(90, 90, Image.SCALE_SMOOTH);
+                        type = "Video";
                     }
-                    Media media = new Media(name, path);
-                    Photos.add(temp);
-                    Multimedia.add(media);
-                    try{
-                        thumbnail = ImageIO.read(new File(temp.getPath())).getScaledInstance(90, 90, Image.SCALE_SMOOTH);
-                    }catch(IOException e){
-                      System.out.println(e);
-                    }
+                    Multimedia file = new Multimedia(name, path);
+                    //file.setThumbnail(thumbnail);
+                    file.setType(type);
+                    file.setLength(size);
+                    FilesInFolder.add(file);
                     //thumbnail = temp.getImage().getScaledInstance(90, 90, Image.SCALE_SMOOTH);
                 } 
-                icon = new ImageIcon(thumbnail);
-                label[i] = new JLabel();
-                label[i].setIcon(icon);
-                label[i].setText("");
-                allThumbnails.add(label[i]);
-                allThumbnails.repaint();
-                allThumbnails.updateUI();
+                //icon = new ImageIcon(thumbnail);
+               //label[i] = new JLabel();
+               //label[i].setIcon(icon);
+               //label[i].setText("");
+                //allThumbnails.add(label[i]);
+                //allThumbnails.repaint();
+                //allThumbnails.updateUI();
             } 
         }
     }
@@ -159,7 +159,7 @@ public class MultimediaApp extends javax.swing.JFrame {
     }
     
     public void nextImage() {
-        if(index < Photos.size() - 1) {
+        if(index < FilesInFolder.size() - 1) {
             index++;
             showImage(setImageSize(index));
         } 
@@ -185,19 +185,19 @@ public class MultimediaApp extends javax.swing.JFrame {
     }
         
     public void play() {
-        for(int i = 0; i < Multimedia.size(); i++) {
-            String check = Photos.get(index).getFileName();
-            if(check.equals(Multimedia.get(i).getTitle())) {
-                if(check.contains(".mp4")) {
+        //String checkName = FilesInFolder.get(index).getFileName();
+        //for(int i = 0; i < FilesInFolder.size(); i++) {
+            //if(checkName.equals(FilesInFolder.get(i).getFileName())) {
+                if(FilesInFolder.get(index).getType().equals("Video")) {
                     panel.setVisible(true);
                 } else {
                     panel.setVisible(false);
                 }
                 
-                mediaPlayer.playMedia(Multimedia.get(i).getPath());
+                mediaPlayer.playMedia(FilesInFolder.get(index).getPath());
                 return;
-            }
-        }
+            //}
+        //}
     }
     
     public void stop() {
@@ -207,15 +207,26 @@ public class MultimediaApp extends javax.swing.JFrame {
     
     public void sendFileName(InetAddress _IPAddress, int _port) throws IOException {
         byte[] sendData = new byte[1500];
-        String fileName = Photos.get(index).getFileName();
+        String fileName = FilesInFolder.get(index).getFileName();
         sendData = fileName.getBytes();
         DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length, _IPAddress, _port);
         serverSocket.send(sendPacket);
     }
     
+    public void sendHeaders(InetAddress _IPAddress, int _port) throws IOException {
+        byte[] headers = new byte[1024];
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+        ObjectOutputStream oos = new ObjectOutputStream(outputStream);
+        oos.writeObject(FilesInFolder.get(index));
+        headers = outputStream.toByteArray();
+        DatagramPacket sendPacket = new DatagramPacket(headers, headers.length, _IPAddress, _port);
+        serverSocket.send(sendPacket);
+    }
+    
     public void sendPreview(InetAddress _IPAddress, int _port) throws IOException {
-        File file = new File(Photos.get(index).getFileName());
-        
+        //File file = new File(Photos.get(index).getFileName());
+        //String fileName = FilesInFolder.get(index).getFileName();
+        //if(fileName != )
         //FileInputStream fileStream = new FileInputStream(file);
             //BufferedInputStream fileBuffer = new BufferedInputStream(fileStream);
             /*OutputStream out = sendSocket.getOutputStream();
@@ -228,59 +239,81 @@ public class MultimediaApp extends javax.swing.JFrame {
             out.close();
             fileBuffer.close();
             fileStream.close();*/
+        
+        /* Send file details (headers) first */
+        sendHeaders(_IPAddress, _port);
+        
+        byte[] receiveData = new byte[1024];
+        DatagramPacket receivePacket = new DatagramPacket(receiveData, receiveData.length);
+        serverSocket.receive(receivePacket);
+        String status = new String(receivePacket.getData(), 0, receivePacket.getLength());
+        if(status.equalsIgnoreCase("File Exists")) {
+            return;
+        } else if(status.equalsIgnoreCase("New File")) {
             
-        byte[] sendDataa = new byte[1500];
-        BufferedImage bufferedImg = ImageIO.read(new File(Photos.get(index).getPath()));
+        
+        /* Send the actual file by chopping it into 1500-byte chunks */
+        //byte[] sendData = new byte[1500];
+        
+        
+        /*BufferedImage bufferedImg = ImageIO.read(new File(FilesInFolder.get(index).getPath()));
         
         Image image = bufferedImg.getScaledInstance(210, 120, Image.SCALE_SMOOTH);
         
         BufferedImage img = new BufferedImage(210, 120, BufferedImage.TYPE_INT_RGB);
-        img.getGraphics().drawImage(image, 0, 0 , null);
+        img.getGraphics().drawImage(image, 0, 0 , null);*/
         
-        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-        /*ObjectOutputStream os = new ObjectOutputStream(outputStream);
-        os.writeObject(Photos.get(index));*/
-        ImageIO.write(img, "jpg", outputStream);
-        outputStream.flush();
-        byte[] buffer = outputStream.toByteArray();
+        //DataInputStream file = new DataInputStream(new FileInputStream(FilesInFolder.get(index).getPath()));
+        //BufferedOutputStream bOut = new BufferedOutputStream(new FileOutputStream(fileName));
+        //ByteArrayOutputStream outputStream = new File(FilesInFolder.get(index).getPath()).
+        
+        //ImageIO.write(img, "jpg", outputStream);
+        //outputStream.flush();
+        File file = new File(FilesInFolder.get(index).getPath());
+        byte[] buffer = new byte[(int) file.length()];
+        try (
+            FileInputStream fileInputStream = new FileInputStream(file)) {
+            fileInputStream.read(buffer);
+            fileInputStream.close();
+        }
+        //byte[] buffer = outputStream.toByteArray();
         int i = 0;
-	int j = sendDataa.length - 1;
+	int j = 1499;
         int length = buffer.length;
         int count = 1;
-        String sentence = String.valueOf(length);
-        sendDataa = sentence.getBytes();
-        DatagramPacket sendPacket1 = new DatagramPacket(sendDataa, sendDataa.length, _IPAddress, _port);       
-        serverSocket.send(sendPacket1);  
+        //String sentence = String.valueOf(length);
+        //sendData = sentence.getBytes();
+        //DatagramPacket sendPacket1 = new DatagramPacket(sendData, sendData.length, _IPAddress, _port);       
+        //serverSocket.send(sendPacket1);  
         
         while(length > 0) {
-            byte[] sendData = new byte[1500];
+            byte[] chunk = new byte[1500];
             if(j < buffer.length) {
                 System.out.println("First");
-		sendData = Arrays.copyOfRange(buffer, i, j);
+		chunk = Arrays.copyOfRange(buffer, i, j);
             } else {
                 System.out.println("Second");
                 int diff = j - buffer.length;
                 j -= diff;
-                sendData = Arrays.copyOfRange(buffer, i, j);
+                chunk = Arrays.copyOfRange(buffer, i, j);
                 
                 System.out.println("FINALLY");
-                System.out.println("J: " + j);
             }
-    System.out.println("Data: " + sendData.length + " x " + count);
-            DatagramPacket sendPacket2 = new DatagramPacket(sendData, sendData.length, _IPAddress, _port);       
-            serverSocket.send(sendPacket2);  
+            System.out.println("Data: " + chunk.length + " x " + count);
+            DatagramPacket sendPacket = new DatagramPacket(chunk, chunk.length, _IPAddress, _port);       
+            serverSocket.send(sendPacket);  
             i = j;
             j += 1500;
             length -= 1500;
             count++;
             System.out.println("Length: " + length);
         }
+        }
         //sendData = outputStream.toByteArray();
-        System.out.println("Length: " + buffer.length);
         //DatagramPacket sendPacket = new DatagramPacket(buffer, buffer.length, _IPAddress, _port);
         //serverSocket.send(sendPacket);
         //os.close();
-        outputStream.close();
+        //outputStream.close();
         /*FileInputStream fileStream = new FileInputStream(file);
         BufferedInputStream fileBuffer = new BufferedInputStream(fileStream);
         int count = 0;
@@ -304,8 +337,8 @@ public class MultimediaApp extends javax.swing.JFrame {
         
     }
     
-    public void setFileDetails() throws FileNotFoundException, IOException {
-        File file = new File(Photos.get(index).getPath());
+    /*public void setFileDetails() throws FileNotFoundException, IOException {
+        File file = new File(FilesInFolder.get(index).getPath());
         DataInputStream diStream = new DataInputStream(new FileInputStream(file));
         long len = (int) file.length();
         byte[] fileBytes = new byte[(int) len];
@@ -315,7 +348,8 @@ public class MultimediaApp extends javax.swing.JFrame {
             fileBytes.length - read)) >= 0) {
             read = read + numRead;
         }
-    }
+    }*/
+    
     public void sendToClient(InetAddress _IPAddress, int _port) throws IOException {
         byte[] sendData = new byte[1500];
         String temp = "Slideshow is currently ongoing.";
@@ -329,20 +363,20 @@ public class MultimediaApp extends javax.swing.JFrame {
         final int port = _port;*/
         time = new Timer(i,new ActionListener() { 
             @Override public void actionPerformed(ActionEvent e) { 
-                String check = Photos.get(index).getFileName();
+                //String check = FilesInFolder.get(index).getFileName();
                 /*try {
                     sendFileName(IPAddress, port);
                 } catch (IOException ex) {
                     Logger.getLogger(MultimediaApp.class.getName()).log(Level.SEVERE, null, ex);
                 }*/
-                if(check.contains(".jpg")) {
+                if(FilesInFolder.get(index).getType().equals("Image")) {
                     showImage(setImageSize(index));
                     index++;
                 } else {
                     index++;
                 }
                 
-                if(index >= Photos.size())
+                if(index >= FilesInFolder.size())
                     index = 0; 
             } 
         }); 
@@ -356,7 +390,7 @@ public class MultimediaApp extends javax.swing.JFrame {
     public ImageIcon setImageSize(int i) { 
         Image img = null; //Photos.get(i).getImage().getScaledInstance(imageViewer.getWidth(), imageViewer.getHeight(), Image.SCALE_SMOOTH);
         try{
-            img = ImageIO.read(new File(Photos.get(i).getPath())).getScaledInstance(imageViewer.getWidth(), imageViewer.getHeight(), Image.SCALE_SMOOTH);
+            img = ImageIO.read(new File(FilesInFolder.get(i).getPath())).getScaledInstance(imageViewer.getWidth(), imageViewer.getHeight(), Image.SCALE_SMOOTH);
         }catch(IOException e){
           System.out.println(e);
         }

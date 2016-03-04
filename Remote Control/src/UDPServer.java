@@ -26,10 +26,12 @@ public class UDPServer {
             
             if(trimmedRequest.equals("Next")) {
                 app.nextImage();
-                app.sendFileName(IPAddress, port);
+                //app.sendFileName(IPAddress, port);
+                app.sendPreview(IPAddress, port);
             } else if(trimmedRequest.equalsIgnoreCase("Back")) {
                 app.prevImage();
-                app.sendFileName(IPAddress, port);
+                //app.sendFileName(IPAddress, port);
+                app.sendPreview(IPAddress, port);
             } else if(trimmedRequest.equalsIgnoreCase("StartSlideshow")) {
                 app.slideshow(500);
                 app.sendToClient(IPAddress, port);
