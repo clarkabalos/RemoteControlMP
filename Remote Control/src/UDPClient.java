@@ -70,7 +70,7 @@ public class UDPClient {
         System.out.println("FROM SERVER: " + modifiedSentence);
         clientSocket.close(); */
         
-        RemoteControl rc = new RemoteControl(clientSocket, IPAddress);
+        RemoteControl rc = new RemoteControl(clientSocket, IPAddress, 9876);
         rc.setVisible(true);
         /*while(true) {
             byte[] receiveData = new byte[1500];

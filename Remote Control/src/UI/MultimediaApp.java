@@ -9,13 +9,16 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.image.BufferedImage;
 import java.io.BufferedReader;
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.*;
 import java.util.ArrayList;
@@ -344,6 +347,101 @@ public class MultimediaApp extends javax.swing.JFrame {
             time.stop();
             slideshow(i);
         }
+    }
+    
+    public void receiveFromClient(InetAddress _IPAddress, int _port) throws Exception {
+        byte[] sendRequest = new byte[1024];
+        DatagramPacket sendPacket;
+        
+        /* Receive details (headers) of file being sent */
+        Multimedia file = getFileDetails();
+        FilesInFolder.add(file);
+        
+        /* Finally request for the actual file */
+        String location = new File("").getAbsolutePath() + "\\Multimedia\\" + file.getFileName();
+        if(checkIfFileExists(location)) {
+            System.out.println("File already exists!");
+            //showPreview(file);
+            sendRequest = "File Exists".getBytes();
+            sendPacket = new DatagramPacket(sendRequest, sendRequest.length, _IPAddress, _port);
+            serverSocket.send(sendPacket);
+        } else {
+            sendRequest = "New File".getBytes();
+            sendPacket = new DatagramPacket(sendRequest, sendRequest.length, _IPAddress, _port);       
+            serverSocket.send(sendPacket); 
+            byte[] wholeFile = getFile((int) file.getLength());
+            writeToDisk(wholeFile, location);
+            //showPreview(file);
+        }
+    }
+    
+    public Multimedia getFileDetails() throws Exception {
+        byte[] headers = new byte[1024];
+        DatagramPacket receiveHeaders = new DatagramPacket(headers, headers.length);
+        serverSocket.receive(receiveHeaders);
+        ByteArrayInputStream in = new ByteArrayInputStream(receiveHeaders.getData());
+        ObjectInputStream is = new ObjectInputStream(in);
+        Multimedia file = (Multimedia) is.readObject();
+        return file;
+    }
+    
+    public boolean checkIfFileExists(String _path) {
+        File file = new File(_path);
+        if(file.exists() && file.isFile()) {
+            return true;
+        } else {
+            return false;
+        }        
+    }
+    
+    public byte[] getFile(int totalLength) throws Exception {
+        int length = totalLength;
+        int i = 0;
+        int j = 1499;
+        int count = 1;
+        byte[] wholeFile = new byte[length];
+        
+        while(length > 0) {
+            byte[] receiveData = new byte[1500];
+            DatagramPacket receivePacket = new DatagramPacket(receiveData, receiveData.length);
+            serverSocket.receive(receivePacket);
+            byte[] data = receivePacket.getData();
+            if(j < totalLength) {
+                System.out.println("First");
+                System.arraycopy(data, 0, wholeFile, i, receiveData.length);
+            } else {
+                System.out.println("Second");
+                int diff = j - totalLength;
+                j -= diff;
+                System.arraycopy(data, 0, wholeFile, i, receiveData.length-diff);
+                System.out.println("FINALLY");
+            }
+            
+            System.out.println("Data: " + data.length + " x " + count);
+            i = j;
+            j += 1500;
+            length -= 1500; 
+            count++;
+            System.out.println("Length: " + length);
+        }
+        System.out.println("STOP");
+        
+        return wholeFile;
+    }
+    
+    public void writeToDisk(byte[] _wholeFile, String _location) throws Exception {
+        /* Check first if directories exists */
+        if(!new File(searchPath + "\\Multimedia\\").isDirectory()) {
+            new File(searchPath + "\\Multimedia\\").mkdirs();
+        } 
+        
+        FileOutputStream fileOuputStream = new FileOutputStream(_location); 
+	fileOuputStream.write(_wholeFile);
+	fileOuputStream.close();
+            //InputStream inputStream = new ByteArrayInputStream(wholeFile);
+            //BufferedImage bImageFromConvert = ImageIO.read(inputStream);
+            //ImageIO.write(bImageFromConvert, "jpg", new File(searchPath + "\\TestWrite\\" + file.getFileName()));
+        System.out.println("Created file!");
     }
     
     // Variables declaration - do not modify//GEN-BEGIN:variables

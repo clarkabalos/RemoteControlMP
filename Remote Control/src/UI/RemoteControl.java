@@ -4,27 +4,36 @@ import Bean.Multimedia;
 import java.awt.Image;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.net.*;
 import java.util.ArrayList;
+import java.util.Arrays;
 import javax.imageio.ImageIO;
 import javax.swing.ImageIcon;
+import javax.swing.JFileChooser;
+import javax.swing.JOptionPane;
+import javax.swing.filechooser.FileNameExtensionFilter;
 
 public class RemoteControl extends javax.swing.JFrame {
     private DatagramSocket clientSocket;
     private InetAddress IPAddress;
+    private int port;
     private String searchPath = new File("").getAbsolutePath();
     private boolean isPlaying = false;
     private boolean isSlideshowPlaying = false;
     
-    public RemoteControl(DatagramSocket _clientSocket, InetAddress _IPAddress) throws Exception {
+    public RemoteControl(DatagramSocket _clientSocket, InetAddress _IPAddress, int _port) throws Exception {
         initComponents();
         clientSocket = _clientSocket;
         IPAddress = _IPAddress;
+        port = _port;
         requestToServer("Initialize");
         editTime.setVisible(false);
         applyBtn.setVisible(false);
@@ -40,6 +49,7 @@ public class RemoteControl extends javax.swing.JFrame {
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
 
+        fileChooser = new javax.swing.JFileChooser();
         playBtn = new javax.swing.JButton();
         applyBtn = new javax.swing.JButton();
         backBtn = new javax.swing.JButton();
@@ -49,6 +59,12 @@ public class RemoteControl extends javax.swing.JFrame {
         editTime = new javax.swing.JFormattedTextField();
         fileNameLabel = new javax.swing.JLabel();
         imagePreview = new javax.swing.JLabel();
+        menuBar = new javax.swing.JMenuBar();
+        menu = new javax.swing.JMenu();
+        uploadFile = new javax.swing.JMenuItem();
+
+        fileChooser.setCurrentDirectory(new java.io.File("C:\\Users\\SVE14112EG\\Pictures\\Wallpapers"));
+        fileChooser.setFileFilter(new FileNameExtensionFilter("Image Files", "jpg", "png", "jpeg"));
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         setMinimumSize(new java.awt.Dimension(230, 390));
@@ -139,6 +155,20 @@ public class RemoteControl extends javax.swing.JFrame {
         imagePreview.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
         imagePreview.setBorder(javax.swing.BorderFactory.createEtchedBorder());
         getContentPane().add(imagePreview, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 70, 210, 120));
+
+        menu.setText("File");
+
+        uploadFile.setText("Upload File");
+        uploadFile.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                uploadFileActionPerformed(evt);
+            }
+        });
+        menu.add(uploadFile);
+
+        menuBar.add(menu);
+
+        setJMenuBar(menuBar);
 
         pack();
     }// </editor-fold>//GEN-END:initComponents
@@ -234,6 +264,21 @@ public class RemoteControl extends javax.swing.JFrame {
         }
     }//GEN-LAST:event_closeWindow
 
+    private void uploadFileActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_uploadFileActionPerformed
+        int returnVal = fileChooser.showOpenDialog(this);
+        if(returnVal == JFileChooser.APPROVE_OPTION) {
+            File file = fileChooser.getSelectedFile();
+            try {
+                String _path = file.getAbsolutePath();
+                System.out.println("Chose a file!");
+                requestToServer("Upload");
+                sendToServer(_path);
+            } catch(Exception e) {
+                System.out.println(e);
+            }
+        }
+    }//GEN-LAST:event_uploadFileActionPerformed
+
     /**
      * @param args the command line arguments
      * @throws java.lang.Exception
@@ -243,7 +288,7 @@ public class RemoteControl extends javax.swing.JFrame {
         String searchPath = new File("").getAbsolutePath();
         byte[] sendRequest = new byte[1024];
         sendRequest = request.getBytes();   
-        DatagramPacket sendPacket = new DatagramPacket(sendRequest, sendRequest.length, IPAddress, 9876);       
+        DatagramPacket sendPacket = new DatagramPacket(sendRequest, sendRequest.length, IPAddress, port);       
         clientSocket.send(sendPacket);  
         
         if(request.equalsIgnoreCase("Close")) {
@@ -252,7 +297,7 @@ public class RemoteControl extends javax.swing.JFrame {
         } else if(request.equalsIgnoreCase("Initialize") || request.equalsIgnoreCase("Next") 
                     || request.equalsIgnoreCase("Back")) {
             receiveFromServer();
-        }
+        } 
     }
     
     public void receiveFromServer() throws Exception {
@@ -270,11 +315,11 @@ public class RemoteControl extends javax.swing.JFrame {
                 System.out.println("Thumbnail already exists!");
                 showPreview(file);
                 sendRequest = "Thumbnail Exists".getBytes();
-                sendPacket = new DatagramPacket(sendRequest, sendRequest.length, IPAddress, 9876);
+                sendPacket = new DatagramPacket(sendRequest, sendRequest.length, IPAddress, port);
                 clientSocket.send(sendPacket);
             } else {
                 sendRequest = "New Thumbnail".getBytes();
-                sendPacket = new DatagramPacket(sendRequest, sendRequest.length, IPAddress, 9876);       
+                sendPacket = new DatagramPacket(sendRequest, sendRequest.length, IPAddress, port);       
                 clientSocket.send(sendPacket); 
                 byte[] wholeFile = getFile((int) file.getThumbnailLength());
                 writeToDisk(wholeFile, thumbnail);
@@ -289,11 +334,11 @@ public class RemoteControl extends javax.swing.JFrame {
             System.out.println("File already exists!");
             showPreview(file);
             sendRequest = "File Exists".getBytes();
-            sendPacket = new DatagramPacket(sendRequest, sendRequest.length, IPAddress, 9876);
+            sendPacket = new DatagramPacket(sendRequest, sendRequest.length, IPAddress, port);
             clientSocket.send(sendPacket);
         } else {
             sendRequest = "New File".getBytes();
-            sendPacket = new DatagramPacket(sendRequest, sendRequest.length, IPAddress, 9876);       
+            sendPacket = new DatagramPacket(sendRequest, sendRequest.length, IPAddress, port);       
             clientSocket.send(sendPacket); 
             byte[] wholeFile = getFile((int) file.getLength());
             writeToDisk(wholeFile, location);
@@ -389,15 +434,102 @@ public class RemoteControl extends javax.swing.JFrame {
         fileNameLabel.setText(_file.getFileName());
     }
     
+    public void sendToServer(String _path) throws IOException {
+        /* Send file details (headers) first */
+        sendFileDetails(_path);
+        byte[] receiveData = new byte[1024];
+        DatagramPacket receivePacket;
+        
+        /* Receive status to see if file already exists or not in client */
+        receiveData = new byte[1024];
+        receivePacket = new DatagramPacket(receiveData, receiveData.length);
+        clientSocket.receive(receivePacket);
+        String status = new String(receivePacket.getData(), 0, receivePacket.getLength());
+        if(status.equalsIgnoreCase("File Exists")) {
+            return;
+        } else if(status.equalsIgnoreCase("New File")) {
+            /* Send the actual file by chopping it into 1500-byte chunks */
+            sendFile(_path);
+        }
+    }
+    
+    public void sendFileDetails(String _path) throws IOException {
+        int x = _path.lastIndexOf('\\');
+        String name = _path.substring(x+1);
+        Multimedia file = new Multimedia(name, _path);
+        if(name.contains(".jpg") || name.contains(".png"))
+            file.setType("Image");
+        else if(name.contains(".mp3"))
+            file.setType("Audio");
+        else if(name.contains(".mp4"))
+            file.setType("Video");
+        long size = new File(_path).length();
+        file.setLength(size);
+        file.setThumbnailPath(null);
+        
+        byte[] headers = new byte[1024];
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+        ObjectOutputStream oos = new ObjectOutputStream(outputStream);
+        oos.writeObject(file);
+        headers = outputStream.toByteArray();
+        DatagramPacket sendPacket = new DatagramPacket(headers, headers.length, IPAddress, port);
+        clientSocket.send(sendPacket);
+        System.out.println("Sent file details!");
+    }
+    
+    public void sendFile(String _path) throws IOException {
+        File file = new File(_path);
+        byte[] buffer = new byte[(int) file.length()];
+        
+        /* Convert file to byte array so it can be sent */
+        try (
+            FileInputStream fileInputStream = new FileInputStream(file)) {
+            fileInputStream.read(buffer);
+            fileInputStream.close();
+        }
+        
+        int i = 0;
+	int j = 1499;
+        int length = buffer.length;
+        int count = 1;
+        
+        while(length > 0) {
+            byte[] chunk = new byte[1500];
+            if(j < buffer.length) {
+                System.out.println("First");
+		chunk = Arrays.copyOfRange(buffer, i, j);
+            } else {
+                System.out.println("Second");
+                int diff = j - buffer.length;
+                j -= diff;
+                chunk = Arrays.copyOfRange(buffer, i, j);
+                
+                System.out.println("FINALLY");
+            }
+            System.out.println("Data: " + chunk.length + " x " + count);
+            DatagramPacket sendPacket = new DatagramPacket(chunk, chunk.length, IPAddress, port);       
+            clientSocket.send(sendPacket);  
+            i = j;
+            j += 1500;
+            length -= 1500;
+            count++;
+            System.out.println("Length: " + length);
+        }
+    }
+    
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton applyBtn;
     private javax.swing.JButton backBtn;
     private javax.swing.JFormattedTextField editTime;
+    private javax.swing.JFileChooser fileChooser;
     private javax.swing.JLabel fileNameLabel;
     private javax.swing.JLabel imagePreview;
     private javax.swing.JLabel jLabel1;
+    private javax.swing.JMenu menu;
+    private javax.swing.JMenuBar menuBar;
     private javax.swing.JButton nextBtn;
     private javax.swing.JButton playBtn;
     private javax.swing.JButton slideshowBtn;
+    private javax.swing.JMenuItem uploadFile;
     // End of variables declaration//GEN-END:variables
 }

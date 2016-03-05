@@ -55,6 +55,8 @@ public class UDPServer {
             } else if(trimmedRequest.equalsIgnoreCase("Stop")) {
                 app.stop();
                 //app.sendFileName(IPAddress, port);
+            } else if(trimmedRequest.equalsIgnoreCase("Upload")) {
+                app.receiveFromClient(IPAddress, port);
             } else if(trimmedRequest.equalsIgnoreCase("Close")) {
                 app.dispose();
                 serverSocket.close();
