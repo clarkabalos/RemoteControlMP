@@ -88,7 +88,7 @@ public class RemoteControl extends javax.swing.JFrame {
                 playBtnActionPerformed(evt);
             }
         });
-        getContentPane().add(playBtn, new org.netbeans.lib.awtextra.AbsoluteConstraints(80, 310, 60, 40));
+        getContentPane().add(playBtn, new org.netbeans.lib.awtextra.AbsoluteConstraints(80, 250, 60, 40));
 
         applyBtn.setFont(new java.awt.Font("Calibri Light", 1, 12)); // NOI18N
         applyBtn.setText("Apply");
@@ -424,8 +424,12 @@ public class RemoteControl extends javax.swing.JFrame {
         
         if(_file.getType().equalsIgnoreCase("Image")) {
             location = searchPath + "\\TestWrite\\" + _file.getFileName();
+            playBtn.setVisible(false);
+            slideshowBtn.setVisible(true);
         } else {
             location = searchPath + "\\TestWrite\\Thumbnails\\" + _file.getThumbnailPath();
+            playBtn.setVisible(true);
+            slideshowBtn.setVisible(false);
         }
         
         Image img = ImageIO.read(new File(location)).getScaledInstance(imagePreview.getWidth(), imagePreview.getHeight(), Image.SCALE_SMOOTH);
