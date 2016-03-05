@@ -9,7 +9,8 @@ import java.io.Serializable;
 public class Multimedia implements Serializable {
     private String fileName;
     private String filePath;
-    //private String thumbnail;
+    private String thumbnailPath;
+    private long thumbnailLength;
     private long length;
     private String type;
     //private Image img;
@@ -36,10 +37,6 @@ public class Multimedia implements Serializable {
         filePath = _filePath;
     }
     
-    /*public Image getThumbnail() {
-        return thumbnail;
-    }*/
-    
     public String getType() {
         return type;
     }
@@ -55,7 +52,20 @@ public class Multimedia implements Serializable {
     public void setLength(long _length) {
         length = _length;
     }
-    /*public void setThumbnail(Image _thumbnail) {
-        thumbnail = _thumbnail;
-    }*/
+    
+    public String getThumbnailPath() {
+        return thumbnailPath;
+    }
+    
+    public void setThumbnailPath(String _thumbnailPath) {
+        thumbnailPath = _thumbnailPath;
+    }
+    
+    public long getThumbnailLength() {
+        return thumbnailLength;
+    }
+    
+    public void setThumbnailLength(long _thumbnailLength) {
+        thumbnailLength = _thumbnailLength;
+    }
 }

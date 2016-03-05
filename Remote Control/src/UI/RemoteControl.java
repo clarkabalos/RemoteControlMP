@@ -5,6 +5,7 @@ import java.awt.Image;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.ObjectInputStream;
@@ -16,6 +17,7 @@ import javax.swing.ImageIcon;
 public class RemoteControl extends javax.swing.JFrame {
     private DatagramSocket clientSocket;
     private InetAddress IPAddress;
+    private String searchPath = new File("").getAbsolutePath();
     private boolean isPlaying = false;
     private boolean isSlideshowPlaying = false;
     
@@ -234,36 +236,8 @@ public class RemoteControl extends javax.swing.JFrame {
 
     /**
      * @param args the command line arguments
+     * @throws java.lang.Exception
      */
-    
-    public Multimedia getFileDetails() throws Exception {
-        byte[] headers = new byte[1024];
-        DatagramPacket receiveHeaders = new DatagramPacket(headers, headers.length);
-        clientSocket.receive(receiveHeaders);
-        ByteArrayInputStream in = new ByteArrayInputStream(receiveHeaders.getData());
-        ObjectInputStream is = new ObjectInputStream(in);
-        Multimedia file = (Multimedia) is.readObject();
-        
-        return file;
-    }
-    
-    public boolean checkIfFileExists(String _path) {
-        File file = new File(_path);
-        if(file.exists() && file.isFile()) {
-            
-            return true;
-        } else {
-            return false;
-        }        
-    }
-    
-    public void showPreview(Multimedia _file) throws IOException {
-        String location = new File("").getAbsolutePath() + "\\TestWrite\\" + _file.getFileName();
-        Image img = ImageIO.read(new File(location)).getScaledInstance(imagePreview.getWidth(), imagePreview.getHeight(), Image.SCALE_SMOOTH);
-        ImageIcon icon = new ImageIcon(img); 
-        imagePreview.setIcon(icon);
-        fileNameLabel.setText(_file.getFileName());
-    }
     
     public void requestToServer(String request) throws Exception {
         String searchPath = new File("").getAbsolutePath();
@@ -275,54 +249,101 @@ public class RemoteControl extends javax.swing.JFrame {
         if(request.equalsIgnoreCase("Close")) {
             clientSocket.close();
             return;
+        } else if(request.equalsIgnoreCase("Initialize") || request.equalsIgnoreCase("Next") 
+                    || request.equalsIgnoreCase("Back")) {
+            receiveFromServer();
         }
+    }
+    
+    public void receiveFromServer() throws Exception {
+        byte[] sendRequest = new byte[1024];
+        DatagramPacket sendPacket;
         
         /* Receive details (headers) of file being sent */
         Multimedia file = getFileDetails();
+        
+        /* If file is not an image (hence, an audio or a video), get thumbnails first */
+        if(!file.getType().equalsIgnoreCase("Image")) {
+            String thumbnail = new File("").getAbsolutePath() + "\\TestWrite\\Thumbnails\\" + file.getThumbnailPath();
+            System.out.println(file.getThumbnailPath());
+            if(checkIfFileExists(thumbnail)) {
+                System.out.println("Thumbnail already exists!");
+                showPreview(file);
+                sendRequest = "Thumbnail Exists".getBytes();
+                sendPacket = new DatagramPacket(sendRequest, sendRequest.length, IPAddress, 9876);
+                clientSocket.send(sendPacket);
+            } else {
+                sendRequest = "New Thumbnail".getBytes();
+                sendPacket = new DatagramPacket(sendRequest, sendRequest.length, IPAddress, 9876);       
+                clientSocket.send(sendPacket); 
+                byte[] wholeFile = getFile((int) file.getThumbnailLength());
+                writeToDisk(wholeFile, thumbnail);
+                showPreview(file);
+            }
+            return; //as of now, don't request for audio & video files first because of shitty udp
+        }
+        
+        /* Finally request for the actual file */
         String location = new File("").getAbsolutePath() + "\\TestWrite\\" + file.getFileName();
         if(checkIfFileExists(location)) {
             System.out.println("File already exists!");
             showPreview(file);
             sendRequest = "File Exists".getBytes();
-            sendPacket = new DatagramPacket(sendRequest, sendRequest.length, IPAddress, 9876);       
-            clientSocket.send(sendPacket); 
+            sendPacket = new DatagramPacket(sendRequest, sendRequest.length, IPAddress, 9876);
+            clientSocket.send(sendPacket);
         } else {
             sendRequest = "New File".getBytes();
             sendPacket = new DatagramPacket(sendRequest, sendRequest.length, IPAddress, 9876);       
             clientSocket.send(sendPacket); 
-        /* Finally receive file */
-        /*byte[] receiveData1 = new byte[1500];
-        DatagramPacket receivePacket1 = new DatagramPacket(receiveData1, receiveData1.length);
-        clientSocket.receive(receivePacket1);
-        String sentence = new String(receivePacket1.getData());*/
-        
-        
-        //int length = Integer.parseInt(sentence.trim());
-        int length = (int) file.getLength();
-        int copylength = length;
+            byte[] wholeFile = getFile((int) file.getLength());
+            writeToDisk(wholeFile, location);
+            showPreview(file);
+        }
+    }
+    
+    public Multimedia getFileDetails() throws Exception {
+        byte[] headers = new byte[1024];
+        DatagramPacket receiveHeaders = new DatagramPacket(headers, headers.length);
+        clientSocket.receive(receiveHeaders);
+        ByteArrayInputStream in = new ByteArrayInputStream(receiveHeaders.getData());
+        ObjectInputStream is = new ObjectInputStream(in);
+        Multimedia file = (Multimedia) is.readObject();
+        return file;
+    }
+    
+    public boolean checkIfFileExists(String _path) {
+        File file = new File(_path);
+        if(file.exists() && file.isFile()) {
+            return true;
+        } else {
+            return false;
+        }        
+    }
+    
+    public byte[] getFile(int totalLength) throws Exception {
+        int length = totalLength;
         int i = 0;
         int j = 1499;
         int count = 1;
         byte[] wholeFile = new byte[length];
+        
         while(length > 0) {
             byte[] receiveData = new byte[1500];
             DatagramPacket receivePacket = new DatagramPacket(receiveData, receiveData.length);
             clientSocket.receive(receivePacket);
             byte[] data = receivePacket.getData();
-            if(j < copylength) {
+            if(j < totalLength) {
                 System.out.println("First");
                 System.arraycopy(data, 0, wholeFile, i, receiveData.length);
             } else {
                 System.out.println("Second");
-                int diff = j - copylength;
+                int diff = j - totalLength;
                 j -= diff;
-                System.out.println(diff);
                 System.arraycopy(data, 0, wholeFile, i, receiveData.length-diff);
                 System.out.println("FINALLY");
             }
             
             System.out.println("Data: " + data.length + " x " + count);
-            
             i = j;
             j += 1500;
             length -= 1500; 
@@ -330,47 +351,42 @@ public class RemoteControl extends javax.swing.JFrame {
             System.out.println("Length: " + length);
         }
         System.out.println("STOP");
-        //System.arraycopy(receiveData2, 0, data, 0, receiveData2.length);
-        //System.arraycopy(b, 0, c, receiveData2.length, b.length);
-            //byte[] data2 = data.getData();
-            InputStream inputStream = new ByteArrayInputStream(wholeFile);
-            BufferedImage bImageFromConvert = ImageIO.read(inputStream);
-            //String searchPath = new File("").getAbsolutePath();
-            ImageIO.write(bImageFromConvert, "jpg", new File(searchPath + "\\TestWrite\\" + file.getFileName()));
-            System.out.println("Created file!");
-            showPreview(file);
-        }
-        /*Multimedia photo = null;
-        ByteArrayInputStream in = new ByteArrayInputStream(receivePacket.getData());
-        ObjectInputStream is = new ObjectInputStream(in);
-        photo = (Multimedia) is.readObject();	
-        String fileName = photo.getFileName();
-        System.out.println("File Name : " + fileName);*/
         
-        /*FileOutputStream fileOut = new FileOutputStream("D:\\" + fileName);
-        InputStream fileIn = receiveSocket.getInputStream();
-        BufferedOutputStream fileBuffer = new BufferedOutputStream(fileOut);
-        int count;
-        int sum = 0;
-        while ((count = fileIn.read(data)) > 0) {
-            sum += count;
-            fileBuffer.write(data, 0, count);
-            System.out.println("Data received : " + sum);
-            fileBuffer.flush();
-        }
-        System.out.println("File Received...");
-        fileBuffer.close();
-        fileIn.close();*/
-        /*String fileName = new String(receivePacket.getData(), 0, receivePacket.getLength());
-        String trimmedName = fileName.trim();
+        return wholeFile;
+    }
+    
+    public void writeToDisk(byte[] _wholeFile, String _location) throws Exception {
+        /* Check first if directories exists */
+        if(!new File(searchPath + "\\TestWrite\\").isDirectory()) {
+            new File(searchPath + "\\TestWrite\\").mkdirs();
+        } 
         
-        if(trimmedName.contains(".mp3") || trimmedName.contains(".mp4")) {
-            playBtn.setVisible(true);
+        if(!new File(searchPath + "\\TestWrite\\Thumbnails\\").isDirectory()) {
+            new File(searchPath + "\\TestWrite\\Thumbnails\\").mkdirs();
+        } 
+        
+        FileOutputStream fileOuputStream = new FileOutputStream(_location); 
+	fileOuputStream.write(_wholeFile);
+	fileOuputStream.close();
+            //InputStream inputStream = new ByteArrayInputStream(wholeFile);
+            //BufferedImage bImageFromConvert = ImageIO.read(inputStream);
+            //ImageIO.write(bImageFromConvert, "jpg", new File(searchPath + "\\TestWrite\\" + file.getFileName()));
+        System.out.println("Created file!");
+    }
+    
+    public void showPreview(Multimedia _file) throws IOException {
+        String location;
+        
+        if(_file.getType().equalsIgnoreCase("Image")) {
+            location = searchPath + "\\TestWrite\\" + _file.getFileName();
         } else {
-            playBtn.setVisible(false);
+            location = searchPath + "\\TestWrite\\Thumbnails\\" + _file.getThumbnailPath();
         }
         
-        fileNameLabel.setText(trimmedName); */
+        Image img = ImageIO.read(new File(location)).getScaledInstance(imagePreview.getWidth(), imagePreview.getHeight(), Image.SCALE_SMOOTH);
+        ImageIcon icon = new ImageIcon(img); 
+        imagePreview.setIcon(icon);
+        fileNameLabel.setText(_file.getFileName());
     }
     
     // Variables declaration - do not modify//GEN-BEGIN:variables

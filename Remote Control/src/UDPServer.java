@@ -27,34 +27,34 @@ public class UDPServer {
             if(trimmedRequest.equals("Next")) {
                 app.nextImage();
                 //app.sendFileName(IPAddress, port);
-                app.sendPreview(IPAddress, port);
+                app.sendToClient(IPAddress, port);
             } else if(trimmedRequest.equalsIgnoreCase("Back")) {
                 app.prevImage();
                 //app.sendFileName(IPAddress, port);
-                app.sendPreview(IPAddress, port);
+                app.sendToClient(IPAddress, port);
             } else if(trimmedRequest.equalsIgnoreCase("StartSlideshow")) {
                 app.slideshow(500);
-                app.sendToClient(IPAddress, port);
+                //app.sendToClient(IPAddress, port);
             } else if(trimmedRequest.equalsIgnoreCase("StopSlideshow")) {
                 app.stopSlideshow();
-                app.sendToClient(IPAddress, port);
+                //app.sendToClient(IPAddress, port);
             } else if(trimmedRequest.contains("SetTime")) {
                 int index = trimmedRequest.lastIndexOf(":");
                 String time = trimmedRequest.substring(index + 1,trimmedRequest.length());
                 app.editTimer(Integer.parseInt(time));
-                app.sendToClient(IPAddress, port);
+                //app.sendToClient(IPAddress, port);
             } else if(trimmedRequest.equalsIgnoreCase("Initialize")) {
                 //app.sendFileName(IPAddress, port);
-                app.sendPreview(IPAddress, port);
+                app.sendToClient(IPAddress, port);
                 //InetAddress IPAddress = receivePacket.getAddress();
                 //int port = receivePacket.getPort();
                 //app.sendFileNames(IPAddress, port);
             } else if(trimmedRequest.equalsIgnoreCase("Play")) {
                 app.play();
-                app.sendFileName(IPAddress, port);
+                //app.sendFileName(IPAddress, port);
             } else if(trimmedRequest.equalsIgnoreCase("Stop")) {
                 app.stop();
-                app.sendFileName(IPAddress, port);
+                //app.sendFileName(IPAddress, port);
             } else if(trimmedRequest.equalsIgnoreCase("Close")) {
                 app.dispose();
                 serverSocket.close();
