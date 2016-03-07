@@ -208,11 +208,17 @@ public class MultimediaApp extends javax.swing.JFrame {
     }
     
     public void sendFileNames(InetAddress _IPAddress, int _port) throws IOException {
-        byte[] headers = new byte[1024];
-        
-        DatagramPacket sendPacket = new DatagramPacket(headers, headers.length, _IPAddress, _port);
+        byte[] sendData = new byte[1500];
+        StringBuilder sb = new StringBuilder();
+                    sb.append(System.lineSeparator());
+        for(int i = 0; i < FilesInFolder.size(); i++) {
+            String fileName = FilesInFolder.get(i).getFileName();
+            sb.append(fileName);
+            sb.append(",");
+        }
+        sendData = sb.toString().getBytes();
+        DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length, _IPAddress, _port);
         serverSocket.send(sendPacket);
-        System.out.println("Sent file details!");
     }
     
     public void sendToClient(InetAddress _IPAddress, int _port) throws IOException {

@@ -69,10 +69,10 @@ public class RemoteControl extends javax.swing.JFrame {
         fileChooser.setFileFilter(new FileNameExtensionFilter("Image Files", "jpg", "png", "jpeg"));
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
-        setMinimumSize(new java.awt.Dimension(230, 390));
-        setPreferredSize(new java.awt.Dimension(230, 390));
+        setMinimumSize(new java.awt.Dimension(380, 360));
+        setPreferredSize(new java.awt.Dimension(380, 360));
         setResizable(false);
-        setSize(new java.awt.Dimension(230, 390));
+        setSize(new java.awt.Dimension(380, 360));
         addWindowListener(new java.awt.event.WindowAdapter() {
             public void windowClosing(java.awt.event.WindowEvent evt) {
                 closeWindow(evt);
@@ -90,7 +90,7 @@ public class RemoteControl extends javax.swing.JFrame {
                 playBtnActionPerformed(evt);
             }
         });
-        getContentPane().add(playBtn, new org.netbeans.lib.awtextra.AbsoluteConstraints(260, 180, 60, 40));
+        getContentPane().add(playBtn, new org.netbeans.lib.awtextra.AbsoluteConstraints(260, 160, 60, 40));
 
         applyBtn.setFont(new java.awt.Font("Calibri Light", 1, 12)); // NOI18N
         applyBtn.setText("Apply");
@@ -102,7 +102,7 @@ public class RemoteControl extends javax.swing.JFrame {
                 applyBtnActionPerformed(evt);
             }
         });
-        getContentPane().add(applyBtn, new org.netbeans.lib.awtextra.AbsoluteConstraints(300, 230, 50, 40));
+        getContentPane().add(applyBtn, new org.netbeans.lib.awtextra.AbsoluteConstraints(300, 210, 50, 40));
 
         backBtn.setFont(new java.awt.Font("Calibri Light", 1, 15)); // NOI18N
         backBtn.setText("Back");
@@ -113,7 +113,7 @@ public class RemoteControl extends javax.swing.JFrame {
                 backBtnActionPerformed(evt);
             }
         });
-        getContentPane().add(backBtn, new org.netbeans.lib.awtextra.AbsoluteConstraints(230, 130, 60, 40));
+        getContentPane().add(backBtn, new org.netbeans.lib.awtextra.AbsoluteConstraints(230, 110, 60, 40));
 
         nextBtn.setFont(new java.awt.Font("Calibri Light", 1, 15)); // NOI18N
         nextBtn.setText("Next");
@@ -125,7 +125,7 @@ public class RemoteControl extends javax.swing.JFrame {
                 nextBtnActionPerformed(evt);
             }
         });
-        getContentPane().add(nextBtn, new org.netbeans.lib.awtextra.AbsoluteConstraints(300, 130, 60, 40));
+        getContentPane().add(nextBtn, new org.netbeans.lib.awtextra.AbsoluteConstraints(300, 110, 60, 40));
 
         slideshowBtn.setFont(new java.awt.Font("Calibri Light", 1, 15)); // NOI18N
         slideshowBtn.setText("Start Slideshow");
@@ -137,35 +137,37 @@ public class RemoteControl extends javax.swing.JFrame {
                 slideshowBtnActionPerformed(evt);
             }
         });
-        getContentPane().add(slideshowBtn, new org.netbeans.lib.awtextra.AbsoluteConstraints(230, 180, 130, 40));
+        getContentPane().add(slideshowBtn, new org.netbeans.lib.awtextra.AbsoluteConstraints(230, 160, 130, 40));
 
         jLabel1.setFont(new java.awt.Font("Calibri Light", 0, 18)); // NOI18N
         jLabel1.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
         jLabel1.setText("Universal Remote");
         jLabel1.setToolTipText("");
-        getContentPane().add(jLabel1, new org.netbeans.lib.awtextra.AbsoluteConstraints(0, 10, 380, 40));
+        getContentPane().add(jLabel1, new org.netbeans.lib.awtextra.AbsoluteConstraints(0, 0, 380, 40));
 
         editTime.setFormatterFactory(new javax.swing.text.DefaultFormatterFactory(new javax.swing.text.NumberFormatter(new java.text.DecimalFormat("#0"))));
         editTime.setText("1000");
         editTime.setInheritsPopupMenu(true);
-        getContentPane().add(editTime, new org.netbeans.lib.awtextra.AbsoluteConstraints(240, 230, 60, 40));
+        getContentPane().add(editTime, new org.netbeans.lib.awtextra.AbsoluteConstraints(240, 210, 60, 40));
 
         fileNameLabel.setFont(new java.awt.Font("Calibri Light", 0, 14)); // NOI18N
         fileNameLabel.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
-        getContentPane().add(fileNameLabel, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 170, 210, 20));
+        getContentPane().add(fileNameLabel, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 280, 210, 20));
 
         imagePreview.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
         imagePreview.setBorder(javax.swing.BorderFactory.createEtchedBorder());
-        getContentPane().add(imagePreview, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 190, 210, 120));
+        getContentPane().add(imagePreview, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 160, 210, 120));
 
         jScrollPane1.setBorder(javax.swing.BorderFactory.createTitledBorder(null, "List of Files Found in Folder", javax.swing.border.TitledBorder.CENTER, javax.swing.border.TitledBorder.DEFAULT_POSITION, new java.awt.Font("Segoe UI Light", 0, 11))); // NOI18N
+        jScrollPane1.setHorizontalScrollBarPolicy(javax.swing.ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
+        jScrollPane1.setToolTipText("");
 
         fileNameList.setColumns(20);
         fileNameList.setFont(new java.awt.Font("Segoe UI Light", 0, 13)); // NOI18N
         fileNameList.setRows(5);
         jScrollPane1.setViewportView(fileNameList);
 
-        getContentPane().add(jScrollPane1, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 50, 210, 110));
+        getContentPane().add(jScrollPane1, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 40, 210, -1));
 
         menu.setText("File");
 
@@ -305,10 +307,13 @@ public class RemoteControl extends javax.swing.JFrame {
         if(request.equalsIgnoreCase("Close")) {
             clientSocket.close();
             return;
-        } else if(request.equalsIgnoreCase("Initialize") || request.equalsIgnoreCase("Next") 
+        } else if(request.equalsIgnoreCase("Next") 
                     || request.equalsIgnoreCase("Back")
                     || request.contains("SetTime")) {
             receiveFromServer();            
+        } else if(request.equalsIgnoreCase("Initialize")) {
+            getFileNames();
+            receiveFromServer();
         }
     }
     
@@ -529,6 +534,16 @@ public class RemoteControl extends javax.swing.JFrame {
             length -= 1500;
             count++;
             System.out.println("Length: " + length);
+        }
+    }
+    
+    public void getFileNames() throws IOException {
+        byte[] headers = new byte[1500];
+        DatagramPacket receiveFileNames = new DatagramPacket(headers, headers.length);
+        clientSocket.receive(receiveFileNames);
+        String[] fileNames = new String(receiveFileNames.getData()).trim().split("\\,");
+        for(int i = 0; i < fileNames.length; i++) {
+            fileNameList.append(fileNames[i] + "\n");
         }
     }
     

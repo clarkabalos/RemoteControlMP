@@ -45,10 +45,10 @@ public class UDPServer {
                 //app.sendToClient(IPAddress, port);
             } else if(trimmedRequest.equalsIgnoreCase("Initialize")) {
                 //app.sendFileName(IPAddress, port);
+                app.sendFileNames(IPAddress, port);
                 app.sendToClient(IPAddress, port);
                 //InetAddress IPAddress = receivePacket.getAddress();
                 //int port = receivePacket.getPort();
-                app.sendFileNames(IPAddress, port);
             } else if(trimmedRequest.equalsIgnoreCase("Play")) {
                 app.play();
                 //app.sendFileName(IPAddress, port);
