@@ -59,6 +59,8 @@ public class RemoteControl extends javax.swing.JFrame {
         editTime = new javax.swing.JFormattedTextField();
         fileNameLabel = new javax.swing.JLabel();
         imagePreview = new javax.swing.JLabel();
+        jScrollPane1 = new javax.swing.JScrollPane();
+        fileNameList = new javax.swing.JTextArea();
         menuBar = new javax.swing.JMenuBar();
         menu = new javax.swing.JMenu();
         uploadFile = new javax.swing.JMenuItem();
@@ -88,7 +90,7 @@ public class RemoteControl extends javax.swing.JFrame {
                 playBtnActionPerformed(evt);
             }
         });
-        getContentPane().add(playBtn, new org.netbeans.lib.awtextra.AbsoluteConstraints(80, 250, 60, 40));
+        getContentPane().add(playBtn, new org.netbeans.lib.awtextra.AbsoluteConstraints(260, 180, 60, 40));
 
         applyBtn.setFont(new java.awt.Font("Calibri Light", 1, 12)); // NOI18N
         applyBtn.setText("Apply");
@@ -100,7 +102,7 @@ public class RemoteControl extends javax.swing.JFrame {
                 applyBtnActionPerformed(evt);
             }
         });
-        getContentPane().add(applyBtn, new org.netbeans.lib.awtextra.AbsoluteConstraints(120, 310, 50, 40));
+        getContentPane().add(applyBtn, new org.netbeans.lib.awtextra.AbsoluteConstraints(300, 230, 50, 40));
 
         backBtn.setFont(new java.awt.Font("Calibri Light", 1, 15)); // NOI18N
         backBtn.setText("Back");
@@ -111,7 +113,7 @@ public class RemoteControl extends javax.swing.JFrame {
                 backBtnActionPerformed(evt);
             }
         });
-        getContentPane().add(backBtn, new org.netbeans.lib.awtextra.AbsoluteConstraints(50, 200, 60, 40));
+        getContentPane().add(backBtn, new org.netbeans.lib.awtextra.AbsoluteConstraints(230, 130, 60, 40));
 
         nextBtn.setFont(new java.awt.Font("Calibri Light", 1, 15)); // NOI18N
         nextBtn.setText("Next");
@@ -123,7 +125,7 @@ public class RemoteControl extends javax.swing.JFrame {
                 nextBtnActionPerformed(evt);
             }
         });
-        getContentPane().add(nextBtn, new org.netbeans.lib.awtextra.AbsoluteConstraints(120, 200, 60, 40));
+        getContentPane().add(nextBtn, new org.netbeans.lib.awtextra.AbsoluteConstraints(300, 130, 60, 40));
 
         slideshowBtn.setFont(new java.awt.Font("Calibri Light", 1, 15)); // NOI18N
         slideshowBtn.setText("Start Slideshow");
@@ -135,26 +137,35 @@ public class RemoteControl extends javax.swing.JFrame {
                 slideshowBtnActionPerformed(evt);
             }
         });
-        getContentPane().add(slideshowBtn, new org.netbeans.lib.awtextra.AbsoluteConstraints(50, 250, 130, 40));
+        getContentPane().add(slideshowBtn, new org.netbeans.lib.awtextra.AbsoluteConstraints(230, 180, 130, 40));
 
         jLabel1.setFont(new java.awt.Font("Calibri Light", 0, 18)); // NOI18N
         jLabel1.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
         jLabel1.setText("Universal Remote");
         jLabel1.setToolTipText("");
-        getContentPane().add(jLabel1, new org.netbeans.lib.awtextra.AbsoluteConstraints(40, 10, 150, 40));
+        getContentPane().add(jLabel1, new org.netbeans.lib.awtextra.AbsoluteConstraints(0, 10, 380, 40));
 
         editTime.setFormatterFactory(new javax.swing.text.DefaultFormatterFactory(new javax.swing.text.NumberFormatter(new java.text.DecimalFormat("#0"))));
         editTime.setText("1000");
         editTime.setInheritsPopupMenu(true);
-        getContentPane().add(editTime, new org.netbeans.lib.awtextra.AbsoluteConstraints(60, 310, 60, 40));
+        getContentPane().add(editTime, new org.netbeans.lib.awtextra.AbsoluteConstraints(240, 230, 60, 40));
 
         fileNameLabel.setFont(new java.awt.Font("Calibri Light", 0, 14)); // NOI18N
         fileNameLabel.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
-        getContentPane().add(fileNameLabel, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 50, 210, 20));
+        getContentPane().add(fileNameLabel, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 170, 210, 20));
 
         imagePreview.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
         imagePreview.setBorder(javax.swing.BorderFactory.createEtchedBorder());
-        getContentPane().add(imagePreview, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 70, 210, 120));
+        getContentPane().add(imagePreview, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 190, 210, 120));
+
+        jScrollPane1.setBorder(javax.swing.BorderFactory.createTitledBorder(null, "List of Files Found in Folder", javax.swing.border.TitledBorder.CENTER, javax.swing.border.TitledBorder.DEFAULT_POSITION, new java.awt.Font("Segoe UI Light", 0, 11))); // NOI18N
+
+        fileNameList.setColumns(20);
+        fileNameList.setFont(new java.awt.Font("Segoe UI Light", 0, 13)); // NOI18N
+        fileNameList.setRows(5);
+        jScrollPane1.setViewportView(fileNameList);
+
+        getContentPane().add(jScrollPane1, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 50, 210, 110));
 
         menu.setText("File");
 
@@ -189,9 +200,9 @@ public class RemoteControl extends javax.swing.JFrame {
     private void slideshowBtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_slideshowBtnActionPerformed
         if(!isSlideshowPlaying) {
             try {
+                isSlideshowPlaying = true;
                 requestToServer("StartSlideshow");
                 slideshowBtn.setText("Stop Slideshow");
-                isSlideshowPlaying = true;
                 //playBtn.setVisible(false);
                 editTime.setVisible(true);
                 applyBtn.setVisible(true);
@@ -200,9 +211,9 @@ public class RemoteControl extends javax.swing.JFrame {
             }
         } else {
             try {
+                isSlideshowPlaying = false;
                 requestToServer("StopSlideshow");
                 slideshowBtn.setText("Start Slideshow");
-                isSlideshowPlaying = false;
                 editTime.setVisible(false);
                 applyBtn.setVisible(false);
             } catch (Exception ex) {
@@ -295,9 +306,10 @@ public class RemoteControl extends javax.swing.JFrame {
             clientSocket.close();
             return;
         } else if(request.equalsIgnoreCase("Initialize") || request.equalsIgnoreCase("Next") 
-                    || request.equalsIgnoreCase("Back")) {
-            receiveFromServer();
-        } 
+                    || request.equalsIgnoreCase("Back")
+                    || request.contains("SetTime")) {
+            receiveFromServer();            
+        }
     }
     
     public void receiveFromServer() throws Exception {
@@ -306,7 +318,6 @@ public class RemoteControl extends javax.swing.JFrame {
         
         /* Receive details (headers) of file being sent */
         Multimedia file = getFileDetails();
-        
         /* If file is not an image (hence, an audio or a video), get thumbnails first */
         if(!file.getType().equalsIgnoreCase("Image")) {
             String thumbnail = new File("").getAbsolutePath() + "\\TestWrite\\Thumbnails\\" + file.getThumbnailPath();
@@ -331,8 +342,8 @@ public class RemoteControl extends javax.swing.JFrame {
         /* Finally request for the actual file */
         String location = new File("").getAbsolutePath() + "\\TestWrite\\" + file.getFileName();
         if(checkIfFileExists(location)) {
-            System.out.println("File already exists!");
             showPreview(file);
+            System.out.println("File already exists!");
             sendRequest = "File Exists".getBytes();
             sendPacket = new DatagramPacket(sendRequest, sendRequest.length, IPAddress, port);
             clientSocket.send(sendPacket);
@@ -527,8 +538,10 @@ public class RemoteControl extends javax.swing.JFrame {
     private javax.swing.JFormattedTextField editTime;
     private javax.swing.JFileChooser fileChooser;
     private javax.swing.JLabel fileNameLabel;
+    private javax.swing.JTextArea fileNameList;
     private javax.swing.JLabel imagePreview;
     private javax.swing.JLabel jLabel1;
+    private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JMenu menu;
     private javax.swing.JMenuBar menuBar;
     private javax.swing.JButton nextBtn;

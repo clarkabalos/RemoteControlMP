@@ -1,6 +1,5 @@
 package UI;
 
-import Bean.Media;
 import Bean.Multimedia;
 import com.sun.jna.NativeLibrary;
 import java.awt.Canvas;
@@ -11,12 +10,9 @@ import java.awt.image.BufferedImage;
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
-import java.io.DataInputStream;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
-import java.io.FileReader;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
@@ -34,7 +30,6 @@ import uk.co.caprica.vlcj.runtime.RuntimeUtil;
 
 public class MultimediaApp extends javax.swing.JFrame {
     //list of multimedia files
-    //private ArrayList<Media> Multimedia = new ArrayList<>();
     private ArrayList<Multimedia> FilesInFolder = new ArrayList<>();
     
     //private File[] files;
@@ -212,6 +207,14 @@ public class MultimediaApp extends javax.swing.JFrame {
         panel.setVisible(false);
     }
     
+    public void sendFileNames(InetAddress _IPAddress, int _port) throws IOException {
+        byte[] headers = new byte[1024];
+        
+        DatagramPacket sendPacket = new DatagramPacket(headers, headers.length, _IPAddress, _port);
+        serverSocket.send(sendPacket);
+        System.out.println("Sent file details!");
+    }
+    
     public void sendToClient(InetAddress _IPAddress, int _port) throws IOException {
         /* Send file details (headers) first */
         sendFileDetails(_IPAddress, _port);
@@ -233,6 +236,7 @@ public class MultimediaApp extends javax.swing.JFrame {
         receiveData = new byte[1024];
         receivePacket = new DatagramPacket(receiveData, receiveData.length);
         serverSocket.receive(receivePacket);
+        System.out.println("Received shit from user!");
         String status = new String(receivePacket.getData(), 0, receivePacket.getLength());
         if(status.equalsIgnoreCase("File Exists")) {
             return;
@@ -294,16 +298,8 @@ public class MultimediaApp extends javax.swing.JFrame {
     }
     
     public void slideshow(int i) { 
-        /*final InetAddress IPAddress = _IPAddress;
-        final int port = _port;*/
         time = new Timer(i,new ActionListener() { 
             @Override public void actionPerformed(ActionEvent e) { 
-                //String check = FilesInFolder.get(index).getFileName();
-                /*try {
-                    sendFileName(IPAddress, port);
-                } catch (IOException ex) {
-                    Logger.getLogger(MultimediaApp.class.getName()).log(Level.SEVERE, null, ex);
-                }*/
                 if(FilesInFolder.get(index).getType().equals("Image")) {
                     showImage(setImageSize(index));
                     index++;
