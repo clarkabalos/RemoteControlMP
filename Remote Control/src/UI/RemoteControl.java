@@ -308,13 +308,12 @@ public class RemoteControl extends javax.swing.JFrame {
             clientSocket.close();
             return;
         } else if(request.equalsIgnoreCase("Next") 
-                    || request.equalsIgnoreCase("Back")
-                    || request.contains("SetTime")) {
+                    || request.equalsIgnoreCase("Back")) {
             receiveFromServer();            
         } else if(request.equalsIgnoreCase("Initialize")) {
             getFileNames();
             receiveFromServer();
-        }
+        } 
     }
     
     public void receiveFromServer() throws Exception {
