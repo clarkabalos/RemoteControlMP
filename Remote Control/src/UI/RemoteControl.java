@@ -1,5 +1,6 @@
 package UI;
 
+import Bean.Media;
 import Bean.Multimedia;
 import java.awt.Image;
 import java.awt.image.BufferedImage;
@@ -500,6 +501,7 @@ public class RemoteControl extends javax.swing.JFrame {
         File file = new File(_path);
         byte[] buffer = new byte[(int) file.length()];
         
+        
         /* Convert file to byte array so it can be sent */
         try (
             FileInputStream fileInputStream = new FileInputStream(file)) {
@@ -510,35 +512,63 @@ public class RemoteControl extends javax.swing.JFrame {
         int i = 0;
 	int j = 1499;
         int length = buffer.length;
-        int count = 1;
+        int count = 0;
         int seqNum = 0;
+        int ackNum = 0;
         //int windowSize = 5;
         byte[] chunk = new byte[1500];
+        byte[] ack = new byte[1024];
+        ArrayList<byte[]> chunkQueue = new ArrayList<>();
         
+        /* put all chunks into queue */
         while(length > 0) {
-            System.out.println(seqNum);
             if(j < buffer.length) {
-		chunk = Arrays.copyOfRange(buffer, i, j);
+                chunk = Arrays.copyOfRange(buffer, i, j);
             } else {
                 int diff = j - buffer.length;
                 j -= diff;
                 chunk = Arrays.copyOfRange(buffer, i, j);
-                System.out.println("Sent all packets!");
             }
-            
-            //System.out.println("Data: " + chunk.length + " x " + count);
-            DatagramPacket sendPacket = new DatagramPacket(chunk, chunk.length, IPAddress, port);    
-            //clientSocket.setSoTimeout(50);
-            clientSocket.send(sendPacket);  
-            
+            chunkQueue.add(chunk);
+                //System.out.println("Data: " + chunk.length + " x " + count);
+            //DatagramPacket sendPacket = new DatagramPacket(chunk, chunk.length, IPAddress, port);   
+            //clientSocket.send(sendPacket);  
+
             i = j;
             j += 1500;
             length -= 1500;
-            seqNum++;
-            //count++;
-            //System.out.println("Length: " + length);
         }
         
+        
+                //System.out.println("Sending segment " + message.getSegmentID() + " with " + bytesRead + " byte payload.");
+                //byte[] test = serialize(message);
+        System.out.println("CHUNKQUEUE SIZE: " + chunkQueue.size());
+        i = 0;
+        while(seqNum < chunkQueue.size()) {
+            while(i < 5) {
+                Media fileChunk = new Media(seqNum, chunkQueue.get(seqNum));
+                byte[] test = serialize(fileChunk);
+                DatagramPacket sendPacket = new DatagramPacket(test, test.length, IPAddress, port);   
+                clientSocket.send(sendPacket);  
+                System.out.println("Sent packet " + fileChunk.getID());
+                i++;
+                seqNum++;
+            }
+            clientSocket.setSoTimeout(100);
+            try {
+                DatagramPacket receiveAck = new DatagramPacket(ack, ack.length);
+                clientSocket.receive(receiveAck);
+                ackNum = Integer.parseInt(new String(receiveAck.getData(), 0, receiveAck.getLength()));
+                System.out.println("Received acknowledge #: " + ackNum);
+                i--;
+            } catch(SocketTimeoutException e) {
+                seqNum = ackNum++;
+                System.out.println("Packet with seq. num " + seqNum + " is deemed lost.");
+                System.out.println("Trying to send packet with seq. num " + seqNum + "...");
+                i--;
+            } 
+        }
+        //clientSocket.setSoTimeout(0);
         
     }
     
@@ -550,6 +580,15 @@ public class RemoteControl extends javax.swing.JFrame {
         for(int i = 0; i < fileNames.length; i++) {
             fileNameList.append(fileNames[i] + "\n");
         }
+    }
+    
+    public byte[] serialize(Object obj) throws IOException
+    {
+        ByteArrayOutputStream byteStream = new ByteArrayOutputStream();
+        ObjectOutputStream objectStream = new ObjectOutputStream(byteStream);
+        objectStream.writeObject(obj);
+        objectStream.flush();
+        return byteStream.toByteArray();
     }
     
     // Variables declaration - do not modify//GEN-BEGIN:variables

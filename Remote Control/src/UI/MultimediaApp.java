@@ -1,5 +1,6 @@
 package UI;
 
+import Bean.Media;
 import Bean.Multimedia;
 import com.sun.jna.NativeLibrary;
 import java.awt.Canvas;
@@ -381,7 +382,7 @@ public class MultimediaApp extends javax.swing.JFrame {
             sendRequest = "New File".getBytes();
             sendPacket = new DatagramPacket(sendRequest, sendRequest.length, _IPAddress, _port);       
             serverSocket.send(sendPacket); 
-            byte[] wholeFile = getFile((int) file.getLength());
+            byte[] wholeFile = getFile((int) file.getLength(), _IPAddress, _port);
             writeToDisk(wholeFile, location);
             //showPreview(file);
         }
@@ -406,53 +407,77 @@ public class MultimediaApp extends javax.swing.JFrame {
         }        
     }
     
-    public byte[] getFile(int totalLength) throws Exception {
+    public byte[] getFile(int totalLength, InetAddress _IPAddress, int _port) throws Exception {
         int length = totalLength;
         int i = 0;
         int j = 1499;
-        //int count = 1;
-        int ack = 0;
+        int count = 1;
+        int ackNum = 0;
         int seqNum = 0;
         byte[] wholeFile = new byte[length];
-        byte[] receiveData = new byte[1500];
-        byte[] data = receiveData;
-        DatagramPacket receivePacket = new DatagramPacket(receiveData, receiveData.length);
+        byte[] receiveData = new byte[2000];
+        byte[] data = new byte[1500];
+        byte[] ack = new byte[1024];
+        Media receiveMSG = new Media();
         
         while(length > 0) {
-            serverSocket.setSoTimeout(50);
-            
-            try {
-                serverSocket.receive(receivePacket);
-                data = receivePacket.getData();
-                if(j < totalLength) {
-                    System.out.println(seqNum);
-                    System.arraycopy(data, 0, wholeFile, i, receiveData.length);
-                } else {
-                    System.out.println(seqNum);
-                    int diff = j - totalLength;
-                    j -= diff;
-                    System.arraycopy(data, 0, wholeFile, i, receiveData.length-diff);
-                    System.out.println("Packet is completed.");
+            while(count < 5) {
+                serverSocket.setSoTimeout(50);
+
+                try {
+                    //receiveMSG = (Media) deserialize(receivePacket.getData());
+                    DatagramPacket receivePacket = new DatagramPacket(receiveData, receiveData.length);
+                    serverSocket.receive(receivePacket);
+                    receiveMSG = (Media) deserialize(receivePacket.getData());
+                    data = receiveMSG.getBytes();
+                    if(j < totalLength) {
+                        System.out.println(seqNum);
+                        System.arraycopy(data, 0, wholeFile, i, data.length);
+                    } else {
+                        System.out.println(seqNum);
+                        int diff = j - totalLength;
+                        j -= diff;
+                        System.out.println("total length: " + totalLength);
+                        System.out.println("j: " + j);
+                        System.out.println("i: " + i);
+                        System.arraycopy(data, 0, wholeFile, i, data.length-diff);
+                        System.out.println("Packet is completed.");
+                    }
+                    seqNum++;
+                } catch(SocketTimeoutException e) {
+                    System.out.println("Packet with seq. num " + seqNum + " is deemed lost.");
+                    break;
                 }
-                seqNum++;
-            } catch(SocketTimeoutException e) {
-                System.out.println("Packet with seq. num " + seqNum + " is deemed lost.");
+
                 
-                break;
+                i = j;
+                j += 1500;
+                length -= 1500; 
+                count++;
+                //System.out.println("Length: " + length);
             }
             
-            //System.out.println("Data: " + data.length + " x " + count);
-            i = j;
-            j += 1500;
-            length -= 1500; 
-            //count++;
-            //System.out.println("Length: " + length);
+            serverSocket.setSoTimeout(0);
+            ack = Integer.toString(receiveMSG.getID()).getBytes();
+            DatagramPacket sendPacket = new DatagramPacket(ack, ack.length, _IPAddress, _port);   
+            serverSocket.send(sendPacket);
+                //ackNum = Integer.parseInt(new String(receiveAck.getData(), 0, receiveAck.getLength()));
+                //System.out.println("Received acknowledge #: " + ackNum);
+            //ackNum++;
+            System.out.println("COUNT: " + count);
+            count--;
+           
         }
-        
-        serverSocket.setSoTimeout(0);
         //System.out.println("STOP");
         
         return wholeFile;
+    }
+    
+    private Object deserialize(byte[] bytes) throws IOException, ClassNotFoundException
+    {
+        ByteArrayInputStream byteStream = new ByteArrayInputStream(bytes);
+        ObjectInputStream objectStream = new ObjectInputStream(byteStream);
+        return (Media) objectStream.readObject();
     }
     
     public void writeToDisk(byte[] _wholeFile, String _location) throws Exception {
