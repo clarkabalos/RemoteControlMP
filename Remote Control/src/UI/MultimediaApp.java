@@ -410,33 +410,47 @@ public class MultimediaApp extends javax.swing.JFrame {
         int length = totalLength;
         int i = 0;
         int j = 1499;
-        int count = 1;
+        //int count = 1;
+        int ack = 0;
+        int seqNum = 0;
         byte[] wholeFile = new byte[length];
+        byte[] receiveData = new byte[1500];
+        byte[] data = receiveData;
+        DatagramPacket receivePacket = new DatagramPacket(receiveData, receiveData.length);
         
         while(length > 0) {
-            byte[] receiveData = new byte[1500];
-            DatagramPacket receivePacket = new DatagramPacket(receiveData, receiveData.length);
-            serverSocket.receive(receivePacket);
-            byte[] data = receivePacket.getData();
-            if(j < totalLength) {
-                System.out.println("First");
-                System.arraycopy(data, 0, wholeFile, i, receiveData.length);
-            } else {
-                System.out.println("Second");
-                int diff = j - totalLength;
-                j -= diff;
-                System.arraycopy(data, 0, wholeFile, i, receiveData.length-diff);
-                System.out.println("FINALLY");
+            serverSocket.setSoTimeout(50);
+            
+            try {
+                serverSocket.receive(receivePacket);
+                data = receivePacket.getData();
+                if(j < totalLength) {
+                    System.out.println(seqNum);
+                    System.arraycopy(data, 0, wholeFile, i, receiveData.length);
+                } else {
+                    System.out.println(seqNum);
+                    int diff = j - totalLength;
+                    j -= diff;
+                    System.arraycopy(data, 0, wholeFile, i, receiveData.length-diff);
+                    System.out.println("Packet is completed.");
+                }
+                seqNum++;
+            } catch(SocketTimeoutException e) {
+                System.out.println("Packet with seq. num " + seqNum + " is deemed lost.");
+                
+                break;
             }
             
-            System.out.println("Data: " + data.length + " x " + count);
+            //System.out.println("Data: " + data.length + " x " + count);
             i = j;
             j += 1500;
             length -= 1500; 
-            count++;
-            System.out.println("Length: " + length);
+            //count++;
+            //System.out.println("Length: " + length);
         }
-        System.out.println("STOP");
+        
+        serverSocket.setSoTimeout(0);
+        //System.out.println("STOP");
         
         return wholeFile;
     }

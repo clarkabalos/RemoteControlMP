@@ -511,28 +511,32 @@ public class RemoteControl extends javax.swing.JFrame {
 	int j = 1499;
         int length = buffer.length;
         int count = 1;
+        int seqNum = 0;
+        //int windowSize = 5;
+        byte[] chunk = new byte[1500];
         
         while(length > 0) {
-            byte[] chunk = new byte[1500];
+            System.out.println(seqNum);
             if(j < buffer.length) {
-                System.out.println("First");
 		chunk = Arrays.copyOfRange(buffer, i, j);
             } else {
-                System.out.println("Second");
                 int diff = j - buffer.length;
                 j -= diff;
                 chunk = Arrays.copyOfRange(buffer, i, j);
-                
-                System.out.println("FINALLY");
+                System.out.println("Sent all packets!");
             }
-            System.out.println("Data: " + chunk.length + " x " + count);
-            DatagramPacket sendPacket = new DatagramPacket(chunk, chunk.length, IPAddress, port);       
+            
+            //System.out.println("Data: " + chunk.length + " x " + count);
+            DatagramPacket sendPacket = new DatagramPacket(chunk, chunk.length, IPAddress, port);    
+            //clientSocket.setSoTimeout(50);
             clientSocket.send(sendPacket);  
+            
             i = j;
             j += 1500;
             length -= 1500;
-            count++;
-            System.out.println("Length: " + length);
+            seqNum++;
+            //count++;
+            //System.out.println("Length: " + length);
         }
         
         
