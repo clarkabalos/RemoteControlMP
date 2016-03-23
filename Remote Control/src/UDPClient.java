@@ -33,7 +33,7 @@ public class UDPClient {
         wholeText = readText("test.txt").toString(); */
         
 	DatagramSocket clientSocket = new DatagramSocket();       
-	InetAddress IPAddress = InetAddress.getByName("10.100.213.114");     
+	InetAddress IPAddress = InetAddress.getByName("localhost");     
         
 	/*byte[] sendData = new byte[20];       
 	byte[] receiveData = new byte[20];       

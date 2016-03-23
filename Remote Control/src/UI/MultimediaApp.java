@@ -6,8 +6,6 @@ import java.awt.Canvas;
 import java.awt.Image;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.image.BufferedImage;
-import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -21,7 +19,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import javax.imageio.ImageIO;
 import javax.swing.ImageIcon;
-//import javax.swing.JLabel;
 import javax.swing.Timer;
 import uk.co.caprica.vlcj.player.MediaPlayerFactory;
 import uk.co.caprica.vlcj.player.embedded.EmbeddedMediaPlayer;
@@ -158,6 +155,19 @@ public class MultimediaApp extends javax.swing.JFrame {
                 //allThumbnails.repaint();
                 //allThumbnails.updateUI();
             } 
+        }
+    }
+    
+    public void addFileToFolder(String _path, long _size) {
+        int x = _path.lastIndexOf('\\');
+        String name = _path.substring(x+1);
+        
+        if(name.endsWith("jpg") || name.endsWith(".png")) {
+            Multimedia file = new Multimedia(name, _path);
+            file.setType("Image");
+            file.setLength(_size);
+            file.setThumbnailPath(null);
+            FilesInFolder.add(file);
         }
     }
     
@@ -443,6 +453,8 @@ public class MultimediaApp extends javax.swing.JFrame {
             //InputStream inputStream = new ByteArrayInputStream(wholeFile);
             //BufferedImage bImageFromConvert = ImageIO.read(inputStream);
             //ImageIO.write(bImageFromConvert, "jpg", new File(searchPath + "\\TestWrite\\" + file.getFileName()));
+        long size = _wholeFile.length;
+        addFileToFolder(_location, size);
         System.out.println("Created file!");
     }
     

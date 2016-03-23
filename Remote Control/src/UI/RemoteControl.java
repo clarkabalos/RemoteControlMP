@@ -534,6 +534,8 @@ public class RemoteControl extends javax.swing.JFrame {
             count++;
             System.out.println("Length: " + length);
         }
+        
+        
     }
     
     public void getFileNames() throws IOException {
