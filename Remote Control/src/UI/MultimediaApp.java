@@ -18,6 +18,8 @@ import java.io.ObjectOutputStream;
 import java.net.*;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.LinkedList;
+import java.util.Queue;
 import javax.imageio.ImageIO;
 import javax.swing.ImageIcon;
 import javax.swing.Timer;
@@ -411,62 +413,162 @@ public class MultimediaApp extends javax.swing.JFrame {
         int length = totalLength;
         int i = 0;
         int j = 1499;
-        int count = 1;
+        int count = 0;
         int ackNum = 0;
         int seqNum = 0;
+        int expectedSeq = 0;
+        int tempcount = 0;
+        int ii = 0;
         byte[] wholeFile = new byte[length];
         byte[] receiveData = new byte[2000];
         byte[] data = new byte[1500];
         byte[] ack = new byte[1024];
+        boolean discardPacket = false;
+        boolean doublePacket = false;
+        boolean lostPacket = false;
+        boolean discardNextPacket = false;
         Media receiveMSG = new Media();
-        
+        LinkedList dataLLL = new LinkedList();
+        LinkedList dataAck = new LinkedList();
+        //ArrayList<Media> dataList = new ArrayList();
+        //Queue dataQueue = new LinkedList();
         while(length > 0) {
-            while(count < 5) {
+            
+            //if(count < 5) {
+            //while(count < 5) {
                 serverSocket.setSoTimeout(50);
-
                 try {
                     //receiveMSG = (Media) deserialize(receivePacket.getData());
                     DatagramPacket receivePacket = new DatagramPacket(receiveData, receiveData.length);
                     serverSocket.receive(receivePacket);
                     receiveMSG = (Media) deserialize(receivePacket.getData());
                     data = receiveMSG.getBytes();
-                    if(j < totalLength) {
-                        System.out.println(seqNum);
-                        System.arraycopy(data, 0, wholeFile, i, data.length);
+                    seqNum = receiveMSG.getID();
+                    
+                    //System.out.println("SEQNUM:::: " + seqNum);
+                    dataLLL.add(ii, receiveMSG);
+                        //dataQueue.add(receiveMSG);
+                        //if(seqNum == expectedSeq && count == 2) {
+                         //   discardPacket = true;
+                        //}
+                    if(!discardPacket) {
+                        if(j < totalLength) {
+                            System.out.println("Packet # " + seqNum + " saved.");
+                            //System.arraycopy(data, 0, wholeFile, i, data.length);
+                        } else {
+                            System.out.println("Packet # " + seqNum + " saved.");
+                            //int diff = j - totalLength;
+                            //j -= diff;
+                            //System.out.println("total length: " + totalLength);
+                            //System.out.println("j: " + j);
+                            //System.out.println("i: " + i);
+                            //System.arraycopy(data, 0, wholeFile, i, data.length-diff);
+                            //System.out.println("Packet is completed.");
+                            System.out.println("FUUUUUUUDGE");
+                            System.out.println("LAMAN NG QUEUE: " + dataLLL.size());
+                        }
+                        seqNum++;
+                        j += 1500;
+                        length -= 1500; 
+                        if(lostPacket) {
+                            lostPacket = false;
+                            discardPacket = true;
+                        }
                     } else {
-                        System.out.println(seqNum);
-                        int diff = j - totalLength;
-                        j -= diff;
-                        System.out.println("total length: " + totalLength);
-                        System.out.println("j: " + j);
-                        System.out.println("i: " + i);
-                        System.arraycopy(data, 0, wholeFile, i, data.length-diff);
-                        System.out.println("Packet is completed.");
+                        System.out.println("Packet # " + seqNum + " is discarded.");
+                        tempcount--;
+                        if(seqNum == expectedSeq)  {
+                            discardPacket = false;
+                            discardNextPacket = false;
+                            doublePacket = true;
+                            /*count++;
+                            if(count == 2) {
+                                System.out.println("STOP DISCARDING PACKETS!!!!!");
+                                discardPacket = false;
+                            } else if(count > 2) {
+                                doublePacket = true;
+                                discardPacket = false;
+                            } */
+                        } 
+                            
                     }
-                    seqNum++;
                 } catch(SocketTimeoutException e) {
-                    System.out.println("Packet with seq. num " + seqNum + " is deemed lost.");
-                    break;
+                    System.out.println("Packet # " + seqNum + " is deemed lost.");
+                    System.out.println("LAMAN NG QUEUE: " + dataLLL.size());
+                    tempcount = 5;
+                    expectedSeq = seqNum;
+                    count = 0;
+                    lostPacket = true;
+                    if(seqNum != 0)
+                        ii--;
+                    /*while(dataLLL.size() > tempcount) {
+                        Media temp = (Media) dataLLL.get(tempcount);
+                        System.out.println("Packet # " + temp.getID());
+                        dataLLL.remove(tempcount);
+                        tempcount++;
+                    }*/
+                    //ii--;
+                    /*while(!dataQueue.isEmpty()) {
+                        System.out.println("Packet # " + (int) dataQueue.remove() + " is discarded.");
+                    }*/
+                    //break;
                 }
 
                 
-                i = j;
-                j += 1500;
-                length -= 1500; 
-                count++;
-                //System.out.println("Length: " + length);
-            }
-            
-            serverSocket.setSoTimeout(0);
-            ack = Integer.toString(receiveMSG.getID()).getBytes();
-            DatagramPacket sendPacket = new DatagramPacket(ack, ack.length, _IPAddress, _port);   
-            serverSocket.send(sendPacket);
-                //ackNum = Integer.parseInt(new String(receiveAck.getData(), 0, receiveAck.getLength()));
-                //System.out.println("Received acknowledge #: " + ackNum);
-            //ackNum++;
-            System.out.println("COUNT: " + count);
-            count--;
+                //i = j;
+                //count++;
+           //}
+           if(seqNum != 0) {
+                Media temptemp = (Media) dataLLL.get(ii);
+                serverSocket.setSoTimeout(0);
+                ack = Integer.toString(temptemp.getID()).getBytes();
+                DatagramPacket sendPacket = new DatagramPacket(ack, ack.length, _IPAddress, _port);   
+                serverSocket.send(sendPacket);
+                    //ackNum = Integer.parseInt(new String(receiveAck.getData(), 0, receiveAck.getLength()));
+                    //System.out.println("Received acknowledge #: " + ackNum);
+                //ackNum++;
+                System.out.println("Sent ack for seq. num " + temptemp.getID());
+                if(discardNextPacket || doublePacket) {
+                    System.out.println("REMOVED!!!");
+                    dataLLL.remove(ii);
+                    ii--;
+                    doublePacket = false;
+                }
+                ii++;
+                if(discardPacket) {
+                    discardNextPacket = true;
+                }
+            //ii++;
+            //count--;
+           }
            
+        }
+        length = totalLength;
+        Media temp;
+        j = 1499;
+        i = 0;
+        while (length > 0) {
+            temp = (Media) dataLLL.remove();
+            //temp = (Media) dataQueue.remove();
+            data = temp.getBytes();
+            if(j < totalLength) {
+                //System.out.println("Packet # " + seqNum + " saved.");
+                System.arraycopy(data, 0, wholeFile, i, data.length);
+            } else {
+                int diff = j - totalLength;
+                j -= diff;
+                System.out.println("total length: " + totalLength);
+                System.out.println("data length: " + data.length);
+                System.out.println("diff " + diff);
+                System.out.println("j: " + j);
+                System.out.println("i: " + i);
+                System.arraycopy(data, 0, wholeFile, i, data.length);
+                //System.out.println("Packet is completed.");
+            }
+                
+            i = j;
+            j += 1500;
+            length -= 1500; 
         }
         //System.out.println("STOP");
         

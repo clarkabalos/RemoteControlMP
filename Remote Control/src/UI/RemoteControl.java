@@ -16,6 +16,9 @@ import java.io.ObjectOutputStream;
 import java.net.*;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.LinkedList;
+import java.util.Queue;
+import java.util.Stack;
 import javax.imageio.ImageIO;
 import javax.swing.ImageIcon;
 import javax.swing.JFileChooser;
@@ -518,7 +521,9 @@ public class RemoteControl extends javax.swing.JFrame {
         //int windowSize = 5;
         byte[] chunk = new byte[1500];
         byte[] ack = new byte[1024];
+        boolean fileComplete = false;
         ArrayList<byte[]> chunkQueue = new ArrayList<>();
+        Queue seqAck = new LinkedList();
         
         /* put all chunks into queue */
         while(length > 0) {
@@ -544,15 +549,22 @@ public class RemoteControl extends javax.swing.JFrame {
                 //byte[] test = serialize(message);
         System.out.println("CHUNKQUEUE SIZE: " + chunkQueue.size());
         i = 0;
-        while(seqNum < chunkQueue.size()) {
-            while(i < 5) {
-                Media fileChunk = new Media(seqNum, chunkQueue.get(seqNum));
-                byte[] test = serialize(fileChunk);
-                DatagramPacket sendPacket = new DatagramPacket(test, test.length, IPAddress, port);   
-                clientSocket.send(sendPacket);  
-                System.out.println("Sent packet " + fileChunk.getID());
-                i++;
-                seqNum++;
+        while(seqNum < chunkQueue.size() || fileComplete) {
+            if(!fileComplete) {
+                while(i < 5) {
+                    Media fileChunk = new Media(seqNum, chunkQueue.get(seqNum));
+                    byte[] test = serialize(fileChunk);
+                    DatagramPacket sendPacket = new DatagramPacket(test, test.length, IPAddress, port);   
+                    clientSocket.send(sendPacket);  
+                    System.out.println("Sent packet " + fileChunk.getID() + " SEQNUM: " + seqNum);
+                    seqAck.add(seqNum);
+                    i++;
+                    seqNum++;
+                }
+                
+                if(seqNum >= chunkQueue.size()) {
+                    fileComplete = true;
+                }
             }
             clientSocket.setSoTimeout(100);
             try {
@@ -560,15 +572,30 @@ public class RemoteControl extends javax.swing.JFrame {
                 clientSocket.receive(receiveAck);
                 ackNum = Integer.parseInt(new String(receiveAck.getData(), 0, receiveAck.getLength()));
                 System.out.println("Received acknowledge #: " + ackNum);
+                int temp = (int) seqAck.element();
+                if(ackNum == temp) {
+                    System.out.println(ackNum + " is equal with " + temp);
+                    seqAck.remove();
+                    
+                } else {
+                    System.out.println(ackNum + " is NOT equal vs " + temp);
+                    seqNum = ackNum + 1;
+                }
+                
                 i--;
             } catch(SocketTimeoutException e) {
-                seqNum = ackNum++;
+                seqNum = ackNum + 1;
                 System.out.println("Packet with seq. num " + seqNum + " is deemed lost.");
                 System.out.println("Trying to send packet with seq. num " + seqNum + "...");
                 i--;
+                fileComplete = false;
             } 
+            
+            if(fileComplete && ackNum == seqNum-1) {
+                fileComplete = false;
+            }
         }
-        //clientSocket.setSoTimeout(0);
+        clientSocket.setSoTimeout(0);
         
     }
     
