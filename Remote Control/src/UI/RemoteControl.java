@@ -518,10 +518,14 @@ public class RemoteControl extends javax.swing.JFrame {
         int count = 0;
         int seqNum = 0;
         int ackNum = 0;
+        int repeatedAck = 0;
+        int prevAck = 0;
+        int tempSeqNum = 0;
         //int windowSize = 5;
         byte[] chunk = new byte[1500];
         byte[] ack = new byte[1024];
         boolean fileComplete = false;
+        boolean lostPacket = false;
         ArrayList<byte[]> chunkQueue = new ArrayList<>();
         Queue seqAck = new LinkedList();
         
@@ -547,19 +551,25 @@ public class RemoteControl extends javax.swing.JFrame {
         
                 //System.out.println("Sending segment " + message.getSegmentID() + " with " + bytesRead + " byte payload.");
                 //byte[] test = serialize(message);
-        System.out.println("CHUNKQUEUE SIZE: " + chunkQueue.size());
+        System.out.println("Number of Packets to Send: " + chunkQueue.size());
         i = 0;
         while(seqNum < chunkQueue.size() || fileComplete) {
             if(!fileComplete) {
                 while(i < 5) {
+                        
                     Media fileChunk = new Media(seqNum, chunkQueue.get(seqNum));
                     byte[] test = serialize(fileChunk);
                     DatagramPacket sendPacket = new DatagramPacket(test, test.length, IPAddress, port);   
                     clientSocket.send(sendPacket);  
-                    System.out.println("Sent packet " + fileChunk.getID() + " SEQNUM: " + seqNum);
+                    System.out.println("SENT: " + fileChunk.getID());
                     seqAck.add(seqNum);
                     i++;
                     seqNum++;
+                    
+                    if(lostPacket) {
+                        seqNum = tempSeqNum;
+                        lostPacket = false;
+                    }
                 }
                 
                 if(seqNum >= chunkQueue.size()) {
@@ -571,19 +581,30 @@ public class RemoteControl extends javax.swing.JFrame {
                 DatagramPacket receiveAck = new DatagramPacket(ack, ack.length);
                 clientSocket.receive(receiveAck);
                 ackNum = Integer.parseInt(new String(receiveAck.getData(), 0, receiveAck.getLength()));
-                System.out.println("Received acknowledge #: " + ackNum);
+                System.out.println("RCVD ACK#: " + ackNum);
                 int temp = (int) seqAck.element();
                 if(ackNum == temp) {
-                    System.out.println(ackNum + " is equal with " + temp);
+                    //System.out.println(ackNum + " is equal with " + temp);
                     seqAck.remove();
                     
                 } else {
-                    System.out.println(ackNum + " is NOT equal vs " + temp);
-                    seqNum = ackNum + 1;
+                    //System.out.println(ackNum + " is NOT equal with " + temp);
+                    if(prevAck == ackNum)
+                        repeatedAck++;
+                    else
+                        repeatedAck = 1;
+                    if(repeatedAck == 3) {
+                        seqNum = ackNum + 1;
+                        repeatedAck = 0;
+                    }
+                    
+                    prevAck = ackNum;
                 }
                 
                 i--;
             } catch(SocketTimeoutException e) {
+                lostPacket = true;
+                tempSeqNum = seqNum;
                 seqNum = ackNum + 1;
                 System.out.println("Packet with seq. num " + seqNum + " is deemed lost.");
                 System.out.println("Trying to send packet with seq. num " + seqNum + "...");

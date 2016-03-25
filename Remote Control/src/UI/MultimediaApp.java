@@ -413,11 +413,11 @@ public class MultimediaApp extends javax.swing.JFrame {
         int length = totalLength;
         int i = 0;
         int j = 1499;
-        int count = 0;
-        int ackNum = 0;
+        //int count = 0;
+        int timeoutCount = 0;
         int seqNum = 0;
         int expectedSeq = 0;
-        int tempcount = 0;
+        int lostSeq = 0;
         int ii = 0;
         byte[] wholeFile = new byte[length];
         byte[] receiveData = new byte[2000];
@@ -429,7 +429,7 @@ public class MultimediaApp extends javax.swing.JFrame {
         boolean discardNextPacket = false;
         Media receiveMSG = new Media();
         LinkedList dataLLL = new LinkedList();
-        LinkedList dataAck = new LinkedList();
+        LinkedList expectedSeqNum = new LinkedList();
         //ArrayList<Media> dataList = new ArrayList();
         //Queue dataQueue = new LinkedList();
         while(length > 0) {
@@ -451,21 +451,24 @@ public class MultimediaApp extends javax.swing.JFrame {
                         //if(seqNum == expectedSeq && count == 2) {
                          //   discardPacket = true;
                         //}
-                    if(!discardPacket) {
-                        if(j < totalLength) {
-                            System.out.println("Packet # " + seqNum + " saved.");
-                            //System.arraycopy(data, 0, wholeFile, i, data.length);
-                        } else {
-                            System.out.println("Packet # " + seqNum + " saved.");
+                    if(seqNum < expectedSeq) {
+                        System.out.println("SEQNUM::::: " + seqNum);
+                        System.out.println("EXPECTED SEQ::::: " + expectedSeq);
+                        doublePacket = true;
+                    }
+                    if(!discardPacket && !doublePacket) {
+                        System.out.println("SAVED: " + seqNum);
+                        //expectedSeqNum.add(seqNum+1);
+                        if(j > totalLength){
                             //int diff = j - totalLength;
                             //j -= diff;
                             //System.out.println("total length: " + totalLength);
                             //System.out.println("j: " + j);
                             //System.out.println("i: " + i);
                             //System.arraycopy(data, 0, wholeFile, i, data.length-diff);
-                            //System.out.println("Packet is completed.");
-                            System.out.println("FUUUUUUUDGE");
-                            System.out.println("LAMAN NG QUEUE: " + dataLLL.size());
+                            System.out.println("Packet transfer is completed.");
+                            //System.out.println("FUUUUUUUDGE");
+                            System.out.println("Number of Packets Received: " + dataLLL.size());
                         }
                         seqNum++;
                         j += 1500;
@@ -475,9 +478,10 @@ public class MultimediaApp extends javax.swing.JFrame {
                             discardPacket = true;
                         }
                     } else {
-                        System.out.println("Packet # " + seqNum + " is discarded.");
-                        tempcount--;
-                        if(seqNum == expectedSeq)  {
+                        if(doublePacket)
+                            System.out.println("DOUBLE PACKET!!");
+                        System.out.println("DISCARDED: " + seqNum);
+                        if(seqNum == lostSeq)  {
                             discardPacket = false;
                             discardNextPacket = false;
                             doublePacket = true;
@@ -494,13 +498,29 @@ public class MultimediaApp extends javax.swing.JFrame {
                     }
                 } catch(SocketTimeoutException e) {
                     System.out.println("Packet # " + seqNum + " is deemed lost.");
-                    System.out.println("LAMAN NG QUEUE: " + dataLLL.size());
-                    tempcount = 5;
-                    expectedSeq = seqNum;
-                    count = 0;
-                    lostPacket = true;
+                    //System.out.println("LAMAN NG QUEUE: " + dataLLL.size());
+                    
+                    //count = 0;
+                    System.out.println("Expected Seq: " + expectedSeq);
+                    if(lostSeq == seqNum) 
+                        timeoutCount++;
+                    else {
+                        timeoutCount = 1;
+                        lostSeq = seqNum;
+                    }
+                    if(timeoutCount == 3) {
+                        System.out.println("LOST PACKET!!!!!!! LOST PACKET!!!!!!");
+                        lostPacket = true;
+                        timeoutCount = 0;
+                    } 
+                    
                     if(seqNum != 0)
                         ii--;
+                    
+                    //lostSeq = seqNum;
+                    System.out.println("Timeout Count: " + timeoutCount);
+                    
+                    //expectedSeq = seqNum;
                     /*while(dataLLL.size() > tempcount) {
                         Media temp = (Media) dataLLL.get(tempcount);
                         System.out.println("Packet # " + temp.getID());
@@ -518,23 +538,24 @@ public class MultimediaApp extends javax.swing.JFrame {
                 //i = j;
                 //count++;
            //}
-           if(seqNum != 0) {
+            if(!doublePacket && !discardPacket)
+                expectedSeq = seqNum;
+            if(seqNum != 0) {
                 Media temptemp = (Media) dataLLL.get(ii);
                 serverSocket.setSoTimeout(0);
                 ack = Integer.toString(temptemp.getID()).getBytes();
                 DatagramPacket sendPacket = new DatagramPacket(ack, ack.length, _IPAddress, _port);   
                 serverSocket.send(sendPacket);
-                    //ackNum = Integer.parseInt(new String(receiveAck.getData(), 0, receiveAck.getLength()));
-                    //System.out.println("Received acknowledge #: " + ackNum);
-                //ackNum++;
-                System.out.println("Sent ack for seq. num " + temptemp.getID());
+                System.out.println("SENT ACK#: " + temptemp.getID());
                 if(discardNextPacket || doublePacket) {
-                    System.out.println("REMOVED!!!");
+                    //System.out.println("REMOVED!!!");
                     dataLLL.remove(ii);
                     ii--;
                     doublePacket = false;
                 }
                 ii++;
+                //if(!doublePacket)
+                 //   expectedSeq = seqNum;
                 if(discardPacket) {
                     discardNextPacket = true;
                 }
@@ -570,7 +591,6 @@ public class MultimediaApp extends javax.swing.JFrame {
             j += 1500;
             length -= 1500; 
         }
-        //System.out.println("STOP");
         
         return wholeFile;
     }
