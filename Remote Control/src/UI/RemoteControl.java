@@ -595,7 +595,7 @@ public class RemoteControl extends javax.swing.JFrame {
         int x = _path.lastIndexOf('\\');
         String name = _path.substring(x+1);
         Multimedia file = new Multimedia(name, _path);
-        if(name.contains(".jpg") || name.contains(".png"))
+        if(name.contains(".jpg") || name.contains(".png") || name.contains(".JPG") || name.contains(".PNG"))
             file.setType("Image");
         else if(name.contains(".mp3"))
             file.setType("Audio");

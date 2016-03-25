@@ -158,6 +158,8 @@ public class MultimediaApp extends javax.swing.JFrame {
     public void nextImage() {
         if(index < FilesInFolder.size() - 1) {
             index++;
+            System.out.println("INDEX NUMBER: " + index);
+            System.out.println("NUMBER OF FILES IN FOLDER: " + FilesInFolder.size());
             showImage(setImageSize(index));
         } 
     }
@@ -242,11 +244,6 @@ public class MultimediaApp extends javax.swing.JFrame {
     }
     
     public void sendFileDetails(InetAddress _IPAddress, int _port) throws IOException {
-        /*byte[] headers = new byte[1024];
-        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-        ObjectOutputStream oos = new ObjectOutputStream(outputStream);
-        oos.writeObject(FilesInFolder.get(index));
-        headers = outputStream.toByteArray();*/
         byte[] headers = serialize(FilesInFolder.get(index));
         DatagramPacket sendPacket = new DatagramPacket(headers, headers.length, _IPAddress, _port);
         serverSocket.send(sendPacket);
@@ -465,6 +462,7 @@ public class MultimediaApp extends javax.swing.JFrame {
         /* Receive details (headers) of file being sent */
         Multimedia file = getFileDetails();
         FilesInFolder.add(file);
+        //System.out.println("NUMBER OF FILES IN FOLDER: " + FilesInFolder.size());
         
         /* Finally request for the actual file */
         String location = new File("").getAbsolutePath() + "\\Multimedia\\" + file.getFileName();
