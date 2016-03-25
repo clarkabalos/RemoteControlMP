@@ -3,14 +3,12 @@ package UI;
 import Bean.Media;
 import Bean.Multimedia;
 import java.awt.Image;
-import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.*;
@@ -18,11 +16,9 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.Queue;
-import java.util.Stack;
 import javax.imageio.ImageIO;
 import javax.swing.ImageIcon;
 import javax.swing.JFileChooser;
-import javax.swing.JOptionPane;
 import javax.swing.filechooser.FileNameExtensionFilter;
 
 public class RemoteControl extends javax.swing.JFrame {
@@ -302,7 +298,6 @@ public class RemoteControl extends javax.swing.JFrame {
      */
     
     public void requestToServer(String request) throws Exception {
-        String searchPath = new File("").getAbsolutePath();
         byte[] sendRequest = new byte[1024];
         sendRequest = request.getBytes();   
         DatagramPacket sendPacket = new DatagramPacket(sendRequest, sendRequest.length, IPAddress, port);       
@@ -311,8 +306,7 @@ public class RemoteControl extends javax.swing.JFrame {
         if(request.equalsIgnoreCase("Close")) {
             clientSocket.close();
             return;
-        } else if(request.equalsIgnoreCase("Next") 
-                    || request.equalsIgnoreCase("Back")) {
+        } else if(request.equalsIgnoreCase("Next") || request.equalsIgnoreCase("Back")) {
             receiveFromServer();            
         } else if(request.equalsIgnoreCase("Initialize")) {
             getFileNames();
@@ -388,6 +382,127 @@ public class RemoteControl extends javax.swing.JFrame {
         int length = totalLength;
         int i = 0;
         int j = 1499;
+        int timeoutCount = 0;
+        int seqNum = 0;
+        int expectedSeq = 0;
+        int lostSeq = 0;
+        byte[] wholeFile = new byte[length];
+        byte[] receiveData = new byte[2000];
+        byte[] data = new byte[1500];
+        byte[] ack = new byte[1024];
+        boolean discardPacket = false;
+        boolean doublePacket = false;
+        boolean lostPacket = false;
+        boolean discardNextPacket = false;
+        Media receiveMSG = new Media();
+        Media temp = new Media();
+        LinkedList dataQueue = new LinkedList();
+        
+        while(length > 0) {
+        clientSocket.setSoTimeout(50);
+            try {
+                DatagramPacket receivePacket = new DatagramPacket(receiveData, receiveData.length);
+                clientSocket.receive(receivePacket);
+                receiveMSG = (Media) deserialize(receivePacket.getData(), "Media");
+                seqNum = receiveMSG.getID();
+
+                dataQueue.add(i, receiveMSG);
+                if(seqNum < expectedSeq) {
+                    doublePacket = true;
+                }
+                if(!discardPacket && !doublePacket) {
+                    System.out.println("SAVED: " + seqNum);
+                    if(lostPacket) {
+                        lostPacket = false;
+                        discardPacket = true;
+                    }
+                    seqNum++;
+                    length -= 1500;                     
+                } else {
+                    if(doublePacket)
+                        System.out.println("Received repeating packet: " + seqNum);
+                    System.out.println("DISCARDED: " + seqNum);
+                    if(seqNum == lostSeq)  {
+                        discardPacket = false;
+                        discardNextPacket = false;
+                        doublePacket = true;
+                    } 
+                }
+            } catch(SocketTimeoutException e) {
+                System.out.println("Packet # " + seqNum + " timeout.");
+                if(lostSeq == seqNum) 
+                    timeoutCount++;
+                else {
+                    timeoutCount = 1;
+                    lostSeq = seqNum;
+                }
+                if(timeoutCount == 3) {
+                    System.out.println("Packet # " + seqNum + " is deemed lost.");
+                    lostPacket = true;
+                    timeoutCount = 0;
+                } 
+                if(seqNum != 0)
+                    i--;
+            }
+            
+            if(!doublePacket && !discardPacket)
+                expectedSeq = seqNum;
+            if(seqNum != 0) {
+                clientSocket.setSoTimeout(0);
+                temp = (Media) dataQueue.get(i);
+                ack = Integer.toString(temp.getID()).getBytes();
+                DatagramPacket sendPacket = new DatagramPacket(ack, ack.length, IPAddress, port);   
+                clientSocket.send(sendPacket);
+                System.out.println("SENT ACK#: " + temp.getID());
+                if(discardNextPacket || doublePacket) {
+                    dataQueue.remove(i);
+                    doublePacket = false;
+                    i--;
+                }
+                i++;
+                if(discardPacket) {
+                    discardNextPacket = true;
+                }
+           }
+            //Thread.sleep(10);
+        }
+        
+        System.out.println("Packet transfer is completed.");
+        System.out.println("Number of Packets Received: " + dataQueue.size());
+        length = totalLength;
+        j = 1499;
+        i = 0;
+        while (length > 0) {
+            temp = (Media) dataQueue.remove();
+            data = temp.getBytes();
+            if(j < totalLength) {
+                System.arraycopy(data, 0, wholeFile, i, data.length);
+            } else {
+                int diff = j - totalLength;
+                j -= diff;
+                System.arraycopy(data, 0, wholeFile, i, data.length);
+            }
+            i = j;
+            j += 1500;
+            length -= 1500; 
+        }
+        
+        return wholeFile;
+    }
+    
+    private Object deserialize(byte[] bytes, String _type) throws IOException, ClassNotFoundException {
+        ByteArrayInputStream byteStream = new ByteArrayInputStream(bytes);
+        ObjectInputStream objectStream = new ObjectInputStream(byteStream);
+        if (_type.equalsIgnoreCase("Media"))
+            return (Media) objectStream.readObject();
+        else 
+            return (Multimedia) objectStream.readObject();  
+    }
+    
+    /*public byte[] getFile(int totalLength) throws Exception {
+        int length = totalLength;
+        int i = 0;
+        int j = 1499;
         int count = 1;
         byte[] wholeFile = new byte[length];
         
@@ -417,7 +532,7 @@ public class RemoteControl extends javax.swing.JFrame {
         System.out.println("STOP");
         
         return wholeFile;
-    }
+    }*/
     
     public void writeToDisk(byte[] _wholeFile, String _location) throws Exception {
         /* Check first if directories exists */
@@ -432,9 +547,6 @@ public class RemoteControl extends javax.swing.JFrame {
         FileOutputStream fileOuputStream = new FileOutputStream(_location); 
 	fileOuputStream.write(_wholeFile);
 	fileOuputStream.close();
-            //InputStream inputStream = new ByteArrayInputStream(wholeFile);
-            //BufferedImage bImageFromConvert = ImageIO.read(inputStream);
-            //ImageIO.write(bImageFromConvert, "jpg", new File(searchPath + "\\TestWrite\\" + file.getFileName()));
         System.out.println("Created file!");
     }
     
@@ -457,7 +569,7 @@ public class RemoteControl extends javax.swing.JFrame {
         fileNameLabel.setText(_file.getFileName());
     }
     
-    public void sendToServer(String _path) throws IOException {
+    public void sendToServer(String _path) throws Exception {
         /* Send file details (headers) first */
         sendFileDetails(_path);
         byte[] receiveData = new byte[1024];
@@ -473,6 +585,9 @@ public class RemoteControl extends javax.swing.JFrame {
         } else if(status.equalsIgnoreCase("New File")) {
             /* Send the actual file by chopping it into 1500-byte chunks */
             sendFile(_path);
+            int x = _path.lastIndexOf('\\');
+            String name = _path.substring(x+1);
+            fileNameList.append(name + "\n");
         }
     }
     
@@ -490,20 +605,20 @@ public class RemoteControl extends javax.swing.JFrame {
         file.setLength(size);
         file.setThumbnailPath(null);
         
-        byte[] headers = new byte[1024];
+        /*byte[] headers = new byte[1024];
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
         ObjectOutputStream oos = new ObjectOutputStream(outputStream);
         oos.writeObject(file);
-        headers = outputStream.toByteArray();
+        headers = outputStream.toByteArray(); */
+        byte[] headers = serialize(file);
         DatagramPacket sendPacket = new DatagramPacket(headers, headers.length, IPAddress, port);
         clientSocket.send(sendPacket);
         System.out.println("Sent file details!");
     }
     
-    public void sendFile(String _path) throws IOException {
+    public void sendFile(String _path) throws Exception {
         File file = new File(_path);
         byte[] buffer = new byte[(int) file.length()];
-        
         
         /* Convert file to byte array so it can be sent */
         try (
@@ -515,13 +630,11 @@ public class RemoteControl extends javax.swing.JFrame {
         int i = 0;
 	int j = 1499;
         int length = buffer.length;
-        int count = 0;
         int seqNum = 0;
         int ackNum = 0;
         int repeatedAck = 0;
         int prevAck = 0;
         int tempSeqNum = 0;
-        //int windowSize = 5;
         byte[] chunk = new byte[1500];
         byte[] ack = new byte[1024];
         boolean fileComplete = false;
@@ -539,24 +652,17 @@ public class RemoteControl extends javax.swing.JFrame {
                 chunk = Arrays.copyOfRange(buffer, i, j);
             }
             chunkQueue.add(chunk);
-                //System.out.println("Data: " + chunk.length + " x " + count);
-            //DatagramPacket sendPacket = new DatagramPacket(chunk, chunk.length, IPAddress, port);   
-            //clientSocket.send(sendPacket);  
 
             i = j;
             j += 1500;
             length -= 1500;
         }
         
-        
-                //System.out.println("Sending segment " + message.getSegmentID() + " with " + bytesRead + " byte payload.");
-                //byte[] test = serialize(message);
         System.out.println("Number of Packets to Send: " + chunkQueue.size());
         i = 0;
         while(seqNum < chunkQueue.size() || fileComplete) {
             if(!fileComplete) {
                 while(i < 5) {
-                        
                     Media fileChunk = new Media(seqNum, chunkQueue.get(seqNum));
                     byte[] test = serialize(fileChunk);
                     DatagramPacket sendPacket = new DatagramPacket(test, test.length, IPAddress, port);   
@@ -570,6 +676,7 @@ public class RemoteControl extends javax.swing.JFrame {
                         seqNum = tempSeqNum;
                         lostPacket = false;
                     }
+                    //Thread.sleep(10);
                 }
                 
                 if(seqNum >= chunkQueue.size()) {
@@ -584,11 +691,9 @@ public class RemoteControl extends javax.swing.JFrame {
                 System.out.println("RCVD ACK#: " + ackNum);
                 int temp = (int) seqAck.element();
                 if(ackNum == temp) {
-                    //System.out.println(ackNum + " is equal with " + temp);
                     seqAck.remove();
                     
                 } else {
-                    //System.out.println(ackNum + " is NOT equal with " + temp);
                     if(prevAck == ackNum)
                         repeatedAck++;
                     else
@@ -617,7 +722,7 @@ public class RemoteControl extends javax.swing.JFrame {
             }
         }
         clientSocket.setSoTimeout(0);
-        
+        System.out.println("Packet transfer is completed.");
     }
     
     public void getFileNames() throws IOException {
@@ -630,8 +735,7 @@ public class RemoteControl extends javax.swing.JFrame {
         }
     }
     
-    public byte[] serialize(Object obj) throws IOException
-    {
+    public byte[] serialize(Object obj) throws IOException {
         ByteArrayOutputStream byteStream = new ByteArrayOutputStream();
         ObjectOutputStream objectStream = new ObjectOutputStream(byteStream);
         objectStream.writeObject(obj);
