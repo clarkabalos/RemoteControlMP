@@ -63,11 +63,17 @@ public class MultimediaApp extends javax.swing.JFrame {
 
         jScrollPane1 = new javax.swing.JScrollPane();
         allThumbnails = new javax.swing.JPanel();
-        jLabel1 = new javax.swing.JLabel();
         panel = new javax.swing.JPanel();
         imageViewer = new javax.swing.JLabel();
+        logo = new javax.swing.JLabel();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
+        setBackground(new java.awt.Color(229, 229, 229));
+        setMaximumSize(new java.awt.Dimension(800, 554));
+        setMinimumSize(new java.awt.Dimension(800, 554));
+        setPreferredSize(new java.awt.Dimension(805, 580));
+        setResizable(false);
+        setSize(new java.awt.Dimension(800, 554));
         getContentPane().setLayout(new org.netbeans.lib.awtextra.AbsoluteLayout());
 
         jScrollPane1.setBorder(null);
@@ -75,23 +81,26 @@ public class MultimediaApp extends javax.swing.JFrame {
         jScrollPane1.setMinimumSize(new java.awt.Dimension(720, 100));
         jScrollPane1.setPreferredSize(new java.awt.Dimension(720, 100));
 
-        allThumbnails.setBorder(javax.swing.BorderFactory.createEtchedBorder());
+        allThumbnails.setBackground(new java.awt.Color(255, 255, 255));
         allThumbnails.setForeground(new java.awt.Color(240, 240, 240));
         jScrollPane1.setViewportView(allThumbnails);
 
-        getContentPane().add(jScrollPane1, new org.netbeans.lib.awtextra.AbsoluteConstraints(0, 50, 720, 100));
+        getContentPane().add(jScrollPane1, new org.netbeans.lib.awtextra.AbsoluteConstraints(0, 450, 660, 106));
 
-        jLabel1.setBackground(new java.awt.Color(153, 153, 153));
-        jLabel1.setFont(new java.awt.Font("Segoe UI", 0, 18)); // NOI18N
-        jLabel1.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
-        jLabel1.setText("Multimedia Application");
-        jLabel1.setToolTipText("");
-        getContentPane().add(jLabel1, new org.netbeans.lib.awtextra.AbsoluteConstraints(4, 4, 710, 50));
-
-        panel.setBackground(new java.awt.Color(0, 0, 0));
+        panel.setBackground(new java.awt.Color(76, 76, 76));
+        panel.setMaximumSize(new java.awt.Dimension(800, 450));
+        panel.setMinimumSize(new java.awt.Dimension(800, 450));
+        panel.setPreferredSize(new java.awt.Dimension(800, 450));
         panel.setLayout(new java.awt.BorderLayout());
-        getContentPane().add(panel, new org.netbeans.lib.awtextra.AbsoluteConstraints(0, 150, 720, 440));
-        getContentPane().add(imageViewer, new org.netbeans.lib.awtextra.AbsoluteConstraints(0, 150, 720, 440));
+        getContentPane().add(panel, new org.netbeans.lib.awtextra.AbsoluteConstraints(0, 0, 800, 450));
+
+        imageViewer.setBackground(new java.awt.Color(76, 76, 76));
+        imageViewer.setIcon(new javax.swing.ImageIcon(getClass().getResource("/Pictures/Current Picture.png"))); // NOI18N
+        getContentPane().add(imageViewer, new org.netbeans.lib.awtextra.AbsoluteConstraints(0, 0, 800, 450));
+
+        logo.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
+        logo.setIcon(new javax.swing.ImageIcon(getClass().getResource("/Pictures/Logo.png"))); // NOI18N
+        getContentPane().add(logo, new org.netbeans.lib.awtextra.AbsoluteConstraints(660, 450, 140, 100));
 
         pack();
     }// </editor-fold>//GEN-END:initComponents
@@ -367,46 +376,6 @@ public class MultimediaApp extends javax.swing.JFrame {
         return byteStream.toByteArray();
     }
     
-    /*public void sendFile(InetAddress _IPAddress, int _port, String _path) throws IOException {
-        File file = new File(_path);
-        byte[] buffer = new byte[(int) file.length()];
-        
-        /* Convert file to byte array so it can be sent 
-        try (
-            FileInputStream fileInputStream = new FileInputStream(file)) {
-            fileInputStream.read(buffer);
-            fileInputStream.close();
-        }
-        
-        int i = 0;
-	int j = 1499;
-        int length = buffer.length;
-        int count = 1;
-        
-        while(length > 0) {
-            byte[] chunk = new byte[1500];
-            if(j < buffer.length) {
-                System.out.println("First");
-		chunk = Arrays.copyOfRange(buffer, i, j);
-            } else {
-                System.out.println("Second");
-                int diff = j - buffer.length;
-                j -= diff;
-                chunk = Arrays.copyOfRange(buffer, i, j);
-                
-                System.out.println("FINALLY");
-            }
-            System.out.println("Data: " + chunk.length + " x " + count);
-            DatagramPacket sendPacket = new DatagramPacket(chunk, chunk.length, _IPAddress, _port);       
-            serverSocket.send(sendPacket);  
-            i = j;
-            j += 1500;
-            length -= 1500;
-            count++;
-            System.out.println("Length: " + length);
-        }
-    }*/
-    
     public void slideshow(int i) { 
         time = new Timer(i,new ActionListener() { 
             @Override public void actionPerformed(ActionEvent e) { 
@@ -462,7 +431,6 @@ public class MultimediaApp extends javax.swing.JFrame {
         /* Receive details (headers) of file being sent */
         Multimedia file = getFileDetails();
         FilesInFolder.add(file);
-        //System.out.println("NUMBER OF FILES IN FOLDER: " + FilesInFolder.size());
         
         /* Finally request for the actual file */
         String location = new File("").getAbsolutePath() + "\\Multimedia\\" + file.getFileName();
@@ -634,8 +602,8 @@ public class MultimediaApp extends javax.swing.JFrame {
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JPanel allThumbnails;
     private javax.swing.JLabel imageViewer;
-    private javax.swing.JLabel jLabel1;
     private javax.swing.JScrollPane jScrollPane1;
+    private javax.swing.JLabel logo;
     private javax.swing.JPanel panel;
     // End of variables declaration//GEN-END:variables
 }
