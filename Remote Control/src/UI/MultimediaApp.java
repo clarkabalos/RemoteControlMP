@@ -22,6 +22,7 @@ import java.util.LinkedList;
 import java.util.Queue;
 import javax.imageio.ImageIO;
 import javax.swing.ImageIcon;
+import javax.swing.JLabel;
 import javax.swing.Timer;
 import uk.co.caprica.vlcj.player.MediaPlayerFactory;
 import uk.co.caprica.vlcj.player.embedded.EmbeddedMediaPlayer;
@@ -34,6 +35,7 @@ public class MultimediaApp extends javax.swing.JFrame {
     
     private int index = 0;
     private Timer time;
+    private JLabel[] label;
     
     //media player-related vars
     private MediaPlayerFactory mediaPlayerFactory;
@@ -48,7 +50,7 @@ public class MultimediaApp extends javax.swing.JFrame {
         serverSocket = _serverSocket;
         NativeLibrary.addSearchPath(RuntimeUtil.getLibVlcLibraryName(), searchPath + "\\Libraries\\VLC Plugins\\64-bit");
         showFilesInFolder(new File(searchPath + "\\Multimedia"));
-        showImage(setImageSize(index));
+        showImage(setImageSize(index, imageViewer.getWidth(), imageViewer.getHeight()));
         initializeMediaPlayer();
     }
 
@@ -71,7 +73,7 @@ public class MultimediaApp extends javax.swing.JFrame {
         setBackground(new java.awt.Color(229, 229, 229));
         setMaximumSize(new java.awt.Dimension(800, 554));
         setMinimumSize(new java.awt.Dimension(800, 554));
-        setPreferredSize(new java.awt.Dimension(805, 580));
+        setPreferredSize(new java.awt.Dimension(805, 585));
         setResizable(false);
         setSize(new java.awt.Dimension(800, 554));
         getContentPane().setLayout(new org.netbeans.lib.awtextra.AbsoluteLayout());
@@ -110,8 +112,10 @@ public class MultimediaApp extends javax.swing.JFrame {
      */
     
     public void showFilesInFolder(File folder) throws IOException {
+        ImageIcon icon = null;
         String type = "";
         File[] files = folder.listFiles();
+        label = new JLabel[files.length];
         for(int i = 0; i < files.length; i++) {
             String path = files[i].getAbsolutePath();
             long size = files[i].length();
@@ -124,6 +128,7 @@ public class MultimediaApp extends javax.swing.JFrame {
                     file.setLength(size);
                     file.setThumbnailPath(null);
                     FilesInFolder.add(file);
+                    
                 } else {
                     String thumbnailPath;
                     int thumbnailLength;
@@ -144,6 +149,13 @@ public class MultimediaApp extends javax.swing.JFrame {
                     FilesInFolder.add(file);
                 } 
             } 
+            icon = setImageSize(i, 80, 80);
+            label[i] = new JLabel();
+            label[i].setIcon(icon);
+            label[i].setText("");
+            allThumbnails.add(label[i]);
+            allThumbnails.repaint();
+            allThumbnails.updateUI();
         }
     }
     
@@ -167,16 +179,14 @@ public class MultimediaApp extends javax.swing.JFrame {
     public void nextImage() {
         if(index < FilesInFolder.size() - 1) {
             index++;
-            System.out.println("INDEX NUMBER: " + index);
-            System.out.println("NUMBER OF FILES IN FOLDER: " + FilesInFolder.size());
-            showImage(setImageSize(index));
+            showImage(setImageSize(index, imageViewer.getWidth(), imageViewer.getHeight()));
         } 
     }
     
     public void prevImage() {
         if(index > 0) {
             index--;
-            showImage(setImageSize(index));
+            showImage(setImageSize(index, imageViewer.getWidth(), imageViewer.getHeight()));
         }
     }
     
@@ -380,7 +390,7 @@ public class MultimediaApp extends javax.swing.JFrame {
         time = new Timer(i,new ActionListener() { 
             @Override public void actionPerformed(ActionEvent e) { 
                 if(FilesInFolder.get(index).getType().equals("Image")) {
-                    showImage(setImageSize(index));
+                    showImage(setImageSize(index, imageViewer.getWidth(), imageViewer.getHeight()));
                     index++;
                 } else {
                     index++;
@@ -397,7 +407,7 @@ public class MultimediaApp extends javax.swing.JFrame {
         time.stop();
     }
     
-    public ImageIcon setImageSize(int i) { 
+    public ImageIcon setImageSize(int i, int width, int height) { 
         Image img = null;
         String location;
         
@@ -408,7 +418,7 @@ public class MultimediaApp extends javax.swing.JFrame {
         }
         
         try{
-            img = ImageIO.read(new File(location)).getScaledInstance(imageViewer.getWidth(), imageViewer.getHeight(), Image.SCALE_SMOOTH);
+            img = ImageIO.read(new File(location)).getScaledInstance(width, height, Image.SCALE_SMOOTH);
         }catch(IOException e){
             System.out.println(e);
         }
