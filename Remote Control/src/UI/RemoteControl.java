@@ -12,8 +12,11 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.*;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.LinkedList;
 import java.util.Queue;
 import javax.imageio.ImageIO;
@@ -450,9 +453,13 @@ public class RemoteControl extends javax.swing.JFrame {
         Media receiveMSG = new Media();
         Media temp = new Media();
         LinkedList dataQueue = new LinkedList();
+        DateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
+        Date date;
         
         while(length > 0) {
         clientSocket.setSoTimeout(50);
+        date = new Date();
+        
             try {
                 DatagramPacket receivePacket = new DatagramPacket(receiveData, receiveData.length);
                 clientSocket.receive(receivePacket);
@@ -460,11 +467,12 @@ public class RemoteControl extends javax.swing.JFrame {
                 seqNum = receiveMSG.getID();
 
                 dataQueue.add(i, receiveMSG);
+                
                 if(seqNum < expectedSeq) {
                     doublePacket = true;
                 }
                 if(!discardPacket && !doublePacket) {
-                    System.out.println("SAVED: " + seqNum);
+                    System.out.println(dateFormat.format(date) + " SAVED: " + seqNum);
                     if(lostPacket) {
                         lostPacket = false;
                         discardPacket = true;
@@ -474,7 +482,7 @@ public class RemoteControl extends javax.swing.JFrame {
                 } else {
                     if(doublePacket)
                         System.out.println("Received repeating packet: " + seqNum);
-                    System.out.println("DISCARDED: " + seqNum);
+                    System.out.println(dateFormat.format(date) + " DISCARDED: " + seqNum);
                     if(seqNum == lostSeq)  {
                         discardPacket = false;
                         discardNextPacket = false;
@@ -482,7 +490,7 @@ public class RemoteControl extends javax.swing.JFrame {
                     } 
                 }
             } catch(SocketTimeoutException e) {
-                System.out.println("Packet # " + seqNum + " timeout.");
+                System.out.println(dateFormat.format(date) + " Packet # " + seqNum + " timeout.");
                 if(lostSeq == seqNum) 
                     timeoutCount++;
                 else {
@@ -490,7 +498,7 @@ public class RemoteControl extends javax.swing.JFrame {
                     lostSeq = seqNum;
                 }
                 if(timeoutCount == 3) {
-                    System.out.println("Packet # " + seqNum + " is deemed lost.");
+                    System.out.println(dateFormat.format(date) + " Packet # " + seqNum + " is deemed lost.");
                     lostPacket = true;
                     timeoutCount = 0;
                 } 
@@ -695,6 +703,8 @@ public class RemoteControl extends javax.swing.JFrame {
         boolean lostPacket = false;
         ArrayList<byte[]> chunkQueue = new ArrayList<>();
         Queue seqAck = new LinkedList();
+        DateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
+        Date date;
         
         /* put all chunks into queue */
         while(length > 0) {
@@ -715,13 +725,14 @@ public class RemoteControl extends javax.swing.JFrame {
         System.out.println("Number of Packets to Send: " + chunkQueue.size());
         i = 0;
         while(seqNum < chunkQueue.size() || fileComplete) {
+            date = new Date();
             if(!fileComplete) {
                 while(i < 5) {
                     Media fileChunk = new Media(seqNum, chunkQueue.get(seqNum));
                     byte[] test = serialize(fileChunk);
                     DatagramPacket sendPacket = new DatagramPacket(test, test.length, IPAddress, port);   
                     clientSocket.send(sendPacket);  
-                    System.out.println("SENT: " + fileChunk.getID());
+                    System.out.println(dateFormat.format(date) + " SENT: " + fileChunk.getID());
                     seqAck.add(seqNum);
                     i++;
                     seqNum++;
@@ -742,7 +753,7 @@ public class RemoteControl extends javax.swing.JFrame {
                 DatagramPacket receiveAck = new DatagramPacket(ack, ack.length);
                 clientSocket.receive(receiveAck);
                 ackNum = Integer.parseInt(new String(receiveAck.getData(), 0, receiveAck.getLength()));
-                System.out.println("RCVD ACK#: " + ackNum);
+                System.out.println(dateFormat.format(date) + " RCVD ACK#: " + ackNum);
                 int temp = (int) seqAck.element();
                 if(ackNum == temp) {
                     seqAck.remove();
@@ -765,7 +776,7 @@ public class RemoteControl extends javax.swing.JFrame {
                 lostPacket = true;
                 tempSeqNum = seqNum;
                 seqNum = ackNum + 1;
-                System.out.println("Packet with seq. num " + seqNum + " is deemed lost.");
+                System.out.println(dateFormat.format(date) + " Packet with seq. num " + seqNum + " is deemed lost.");
                 System.out.println("Trying to send packet with seq. num " + seqNum + "...");
                 i--;
                 fileComplete = false;
