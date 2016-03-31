@@ -20,10 +20,10 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Calendar;
 import java.util.Date;
 import java.util.LinkedList;
 import java.util.Queue;
+import java.util.Random;
 import javax.imageio.ImageIO;
 import javax.swing.ImageIcon;
 import javax.swing.JLabel;
@@ -48,6 +48,9 @@ public class MultimediaApp extends javax.swing.JFrame {
     
     private final String searchPath = new File("").getAbsolutePath();
     private DatagramSocket serverSocket; 
+    private double lossProbability = 0.1;
+    private int timeoutSecs = 50;
+    private int delaySecs = 0;
     
     public MultimediaApp(DatagramSocket _serverSocket) throws Exception {
         initComponents();
@@ -397,12 +400,15 @@ public class MultimediaApp extends javax.swing.JFrame {
     public void slideshow(int i) { 
         time = new Timer(i,new ActionListener() { 
             @Override public void actionPerformed(ActionEvent e) { 
-                if(FilesInFolder.get(index).getType().equals("Image")) {
+                /*if(FilesInFolder.get(index).getType().equals("Image")) {
                     showImage(setImageSize(index, imageViewer.getWidth(), imageViewer.getHeight()));
                     index++;
                 } else {
                     index++;
-                }
+                } */
+                
+                showImage(setImageSize(index, imageViewer.getWidth(), imageViewer.getHeight()));
+                index++;
                 
                 if(index >= FilesInFolder.size())
                     index = 0; 
@@ -413,6 +419,7 @@ public class MultimediaApp extends javax.swing.JFrame {
     
     public void stopSlideshow() {
         time.stop();
+        index--;
     }
     
     public ImageIcon setImageSize(int i, int width, int height) { 
@@ -463,6 +470,12 @@ public class MultimediaApp extends javax.swing.JFrame {
             serverSocket.send(sendPacket); 
             byte[] wholeFile = getFile((int) file.getLength(), _IPAddress, _port);
             writeToDisk(wholeFile, location);
+            JLabel temp = new JLabel();
+            temp.setIcon(setImageSize(FilesInFolder.size()-1, 80, 80));
+            temp.setText("");
+            allThumbnails.add(temp);
+            allThumbnails.repaint();
+            allThumbnails.updateUI();
         }
     }
     
@@ -492,6 +505,7 @@ public class MultimediaApp extends javax.swing.JFrame {
         int seqNum = 0;
         int expectedSeq = 0;
         int lostSeq = 0;
+        int tempCount = 0;
         byte[] wholeFile = new byte[length];
         byte[] receiveData = new byte[2000];
         byte[] data = new byte[1500];
@@ -500,70 +514,83 @@ public class MultimediaApp extends javax.swing.JFrame {
         boolean doublePacket = false;
         boolean lostPacket = false;
         boolean discardNextPacket = false;
+        boolean fileComplete = false;
         Media receiveMSG = new Media();
         Media temp = new Media();
         LinkedList dataQueue = new LinkedList();
-        //java.sql.Date currentTimestamp = new java.sql.Timestamp(Calendar.getInstance().getTime().getTime());
         DateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
         Date date;
+        Random random = new Random();
         
-        while(length > 0) {
-        serverSocket.setSoTimeout(50);
+        while(length > 0 || fileComplete) {
+        serverSocket.setSoTimeout(timeoutSecs);
         date = new Date();
             try {
                 DatagramPacket receivePacket = new DatagramPacket(receiveData, receiveData.length);
                 serverSocket.receive(receivePacket);
                 receiveMSG = (Media) deserialize(receivePacket.getData(), "Media");
-                seqNum = receiveMSG.getID();
+                //seqNum = receiveMSG.getID();
 
                 dataQueue.add(i, receiveMSG);
-                if(seqNum < expectedSeq) {
+                if(receiveMSG.getID() < expectedSeq) {
                     doublePacket = true;
+                } else {
+                    doublePacket = false;
                 }
                 if(!discardPacket && !doublePacket) {
-                    System.out.println(dateFormat.format(date) + " SAVED: " + seqNum);
-                    if(lostPacket) {
+                    System.out.println(dateFormat.format(date) + " SAVED: " + receiveMSG.getID());
+                    /*if(lostPacket) {
                         lostPacket = false;
                         discardPacket = true;
-                    }
+                    }*/
                     seqNum++;
-                    length -= 1500;                     
+                    length -= 1500;
+                    if(length < 0) 
+                        fileComplete = true;
                 } else {
                     if(doublePacket)
-                        System.out.println("Received repeating packet: " + seqNum);
-                    System.out.println(dateFormat.format(date) + " DISCARDED: " + seqNum);
-                    if(seqNum == lostSeq)  {
+                        System.out.println("Received repeating packet: " + receiveMSG.getID());
+                    System.out.println(dateFormat.format(date) + " DISCARDED: " + receiveMSG.getID());
+                    if(receiveMSG.getID() == lostSeq)  {
                         discardPacket = false;
                         discardNextPacket = false;
                         doublePacket = true;
                     } 
                 }
             } catch(SocketTimeoutException e) {
-                System.out.println("Packet # " + seqNum + " timeout.");
-                if(lostSeq == seqNum) 
-                    timeoutCount++;
-                else {
-                    timeoutCount = 1;
-                    lostSeq = seqNum;
+                if(!fileComplete) {
+                    System.out.println(dateFormat.format(date) + " Packet # " + seqNum + " timeout.");
+                    if(lostSeq == seqNum) 
+                        timeoutCount++;
+                    else {
+                        timeoutCount = 1;
+                        lostSeq = seqNum;
+                    }
+                    if(seqNum != 0)
+                        i--;
+                    if(timeoutCount == 3) {
+                        System.out.println(dateFormat.format(date) + " Packet # " + seqNum + " is deemed lost.");
+                        lostPacket = true;
+                        timeoutCount = 0;
+                    } 
+                } else if(fileComplete) {
+                    serverSocket.setSoTimeout(0);
+                    System.out.println("Packet transfer is completed.");
+                    break;
                 }
-                if(timeoutCount == 3) {
-                    System.out.println(dateFormat.format(date) + " Packet # " + seqNum + " is deemed lost.");
-                    lostPacket = true;
-                    timeoutCount = 0;
-                } 
-                if(seqNum != 0)
-                    i--;
             }
             
             if(!doublePacket && !discardPacket)
                 expectedSeq = seqNum;
             if(seqNum != 0) {
                 serverSocket.setSoTimeout(0);
-                temp = (Media) dataQueue.get(i);
-                ack = Integer.toString(temp.getID()).getBytes();
-                DatagramPacket sendPacket = new DatagramPacket(ack, ack.length, _IPAddress, _port);   
-                serverSocket.send(sendPacket);
-                System.out.println("SENT ACK#: " + temp.getID());
+                if(random.nextDouble() > lossProbability || fileComplete) {
+                    temp = (Media) dataQueue.get(i);
+                    ack = Integer.toString(temp.getID()).getBytes();
+                    DatagramPacket sendPacket = new DatagramPacket(ack, ack.length, _IPAddress, _port);   
+                    serverSocket.send(sendPacket);
+                    System.out.println(dateFormat.format(date) + " SENT ACK#: " + temp.getID());
+                }
                 if(discardNextPacket || doublePacket) {
                     dataQueue.remove(i);
                     doublePacket = false;
@@ -574,10 +601,10 @@ public class MultimediaApp extends javax.swing.JFrame {
                     discardNextPacket = true;
                 }
             }
-            //Thread.sleep(10);
+            Thread.sleep(delaySecs);
         }
         
-        System.out.println("Packet transfer is completed.");
+        //System.out.println("Packet transfer is completed.");
         System.out.println("Number of Packets Received: " + dataQueue.size());
         length = totalLength;
         j = 1499;

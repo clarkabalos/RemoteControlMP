@@ -19,6 +19,7 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.LinkedList;
 import java.util.Queue;
+import java.util.Random;
 import javax.imageio.ImageIO;
 import javax.swing.ImageIcon;
 import javax.swing.JFileChooser;
@@ -31,6 +32,9 @@ public class RemoteControl extends javax.swing.JFrame {
     private String searchPath = new File("").getAbsolutePath();
     private boolean isPlaying = false;
     private boolean isSlideshowPlaying = false;
+    private double lossProbability = 0;
+    private int timeoutSecs = 100;
+    private int delaySecs = 0;
     
     public RemoteControl(DatagramSocket _clientSocket, InetAddress _IPAddress, int _port) throws Exception {
         initComponents();
@@ -362,7 +366,8 @@ public class RemoteControl extends javax.swing.JFrame {
         if(request.equalsIgnoreCase("Close")) {
             clientSocket.close();
             return;
-        } else if(request.equalsIgnoreCase("Next") || request.equalsIgnoreCase("Back")) {
+        } else if(request.equalsIgnoreCase("Next") || request.equalsIgnoreCase("Back") 
+                || request.equalsIgnoreCase("StopSlideshow")) {
             receiveFromServer();            
         } else if(request.equalsIgnoreCase("Initialize")) {
             getFileNames();
@@ -705,6 +710,7 @@ public class RemoteControl extends javax.swing.JFrame {
         Queue seqAck = new LinkedList();
         DateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
         Date date;
+        Random random = new Random();
         
         /* put all chunks into queue */
         while(length > 0) {
@@ -741,37 +747,44 @@ public class RemoteControl extends javax.swing.JFrame {
                         seqNum = tempSeqNum;
                         lostPacket = false;
                     }
-                    //Thread.sleep(10);
+                    Thread.sleep(delaySecs);
                 }
                 
                 if(seqNum >= chunkQueue.size()) {
                     fileComplete = true;
                 }
             }
-            clientSocket.setSoTimeout(100);
+            clientSocket.setSoTimeout(timeoutSecs);
             try {
                 DatagramPacket receiveAck = new DatagramPacket(ack, ack.length);
                 clientSocket.receive(receiveAck);
                 ackNum = Integer.parseInt(new String(receiveAck.getData(), 0, receiveAck.getLength()));
-                System.out.println(dateFormat.format(date) + " RCVD ACK#: " + ackNum);
-                int temp = (int) seqAck.element();
-                if(ackNum == temp) {
-                    seqAck.remove();
-                    
-                } else {
-                    if(prevAck == ackNum)
-                        repeatedAck++;
-                    else
-                        repeatedAck = 1;
-                    if(repeatedAck == 3) {
-                        seqNum = ackNum + 1;
-                        repeatedAck = 0;
+                if(random.nextDouble() > lossProbability) {
+                    System.out.println(dateFormat.format(date) + " RCVD ACK#: " + ackNum);
+                    int temp = (int) seqAck.element();
+                    if(ackNum == temp) {
+                        seqAck.remove();
+                    } else {
+                        if(prevAck == ackNum)
+                            repeatedAck++;
+                        else
+                            repeatedAck = 1;
+                        if(repeatedAck == 3) {
+                            seqNum = ackNum + 1;
+                            repeatedAck = 0;
+                        }
+                        prevAck = ackNum;
                     }
-                    
-                    prevAck = ackNum;
+                    i--;
+                } else {
+                    lostPacket = true;
+                    tempSeqNum = seqNum;
+                    seqNum = ackNum + 1;
+                    System.out.println(dateFormat.format(date) + " Packet with seq. num " + seqNum + " is deemed lost.");
+                    System.out.println("Trying to send packet with seq. num " + seqNum + "...");
+                    i--;
+                    fileComplete = false;
                 }
-                
-                i--;
             } catch(SocketTimeoutException e) {
                 lostPacket = true;
                 tempSeqNum = seqNum;

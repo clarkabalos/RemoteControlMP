@@ -27,6 +27,7 @@ public class UDPServer {
                 app.slideshow(1000);
             } else if(trimmedRequest.equalsIgnoreCase("StopSlideshow")) {
                 app.stopSlideshow();
+                app.sendToClient(IPAddress, port);
             } else if(trimmedRequest.contains("SetTime")) {
                 int index = trimmedRequest.lastIndexOf(":");
                 String time = trimmedRequest.substring(index + 1,trimmedRequest.length());
